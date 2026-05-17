@@ -169,17 +169,23 @@ public class GeminiService {
         return callAI(prompt);
     }
 
+    private String lastGroqError = "";
+    private String lastGeminiError = "";
+
     private String callAI(String prompt) {
+        lastGroqError = "";
+        lastGeminiError = "";
+
         String groqResult = callGroq(prompt);
         if (groqResult != null) return groqResult;
 
         String geminiResult = callGemini(prompt);
         if (geminiResult != null) return geminiResult;
 
-        return "Both AI providers are currently unavailable. Please try again in a minute.\n\n" +
-               "**Setup tips:**\n" +
-               "- Gemini: Set `gemini.api.key` in application.properties (free at https://aistudio.google.com/app/apikey)\n" +
-               "- Groq: Set `groq.api.key` in application.properties (free at https://console.groq.com/keys)";
+        return "AI is temporarily unavailable. Please try again.\n\n" +
+               "**Debug info:**\n" +
+               "- Groq: " + (lastGroqError.isEmpty() ? "no key" : lastGroqError) + "\n" +
+               "- Gemini: " + (lastGeminiError.isEmpty() ? "no key" : lastGeminiError);
     }
 
     @SuppressWarnings("unchecked")
@@ -206,7 +212,8 @@ public class GeminiService {
             List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
             return (String) parts.get(0).get("text");
         } catch (Exception e) {
-            System.out.println("[WanderTribe] Gemini failed: " + e.getMessage() + " — falling back to Groq");
+            lastGeminiError = e.getClass().getSimpleName() + ": " + e.getMessage();
+            System.out.println("[WanderTribe] Gemini failed: " + lastGeminiError + " — falling back to Groq");
             return null;
         }
     }
@@ -214,7 +221,11 @@ public class GeminiService {
     @SuppressWarnings("unchecked")
     private String callGroq(String prompt) {
         String key = getGroqKey();
-        if (key == null || key.isBlank()) return null;
+        if (key == null || key.isBlank()) {
+            lastGroqError = "no key available (env=" + (groqApiKey == null ? "null" : groqApiKey.length() + " chars") + ")";
+            return null;
+        }
+        System.out.println("[WanderTribe] Calling Groq with key: " + key.substring(0, 8) + "... prompt length: " + prompt.length());
 
         try {
             List<Map<String, String>> messages = new ArrayList<>();
@@ -238,7 +249,8 @@ public class GeminiService {
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
             return (String) message.get("content");
         } catch (Exception e) {
-            System.out.println("[WanderTribe] Groq failed: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            lastGroqError = e.getClass().getSimpleName() + ": " + e.getMessage();
+            System.out.println("[WanderTribe] Groq failed: " + lastGroqError);
             return null;
         }
     }
