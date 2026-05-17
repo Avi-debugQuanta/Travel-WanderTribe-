@@ -1,8 +1,10 @@
 services:
   - type: web
     name: wandertribe
-    runtime: docker
+    env: docker
+    plan: free
     dockerfilePath: ./Dockerfile
+    branch: master
     envVars:
       - key: GEMINI_API_KEY
         value: AIzaSyD4DBv28VDq3Y8BjUnDLE6jhS1WVC2zXzw
