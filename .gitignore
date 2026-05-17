@@ -1,0 +1,31 @@
+# Java / Spring Boot
+Travel/target/
+Travel/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.log
+*.iml
+.idea/
+.settings/
+.classpath
+.project
+*.swp
+*~
+
+# React / Node
+travel-frontend/node_modules/
+travel-frontend/dist/
+travel-frontend/.env
+travel-frontend/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.code-workspace
+
+# Misc
+*.zip
