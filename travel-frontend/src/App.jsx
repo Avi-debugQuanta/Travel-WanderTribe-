@@ -21,9 +21,10 @@ class ErrorBoundary extends Component {
 }
 
 function App() {
+  const basename = import.meta.env.BASE_URL || '/';
   return (
     <ErrorBoundary>
-      <Router>
+      <Router basename={basename}>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white">
           <Navbar />
           <Routes>
