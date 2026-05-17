@@ -32,9 +32,13 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      await userApi.sendOtp(email, name);
+      const { data } = await userApi.sendOtp(email, name);
       setStep('otp');
-      setSuccess('OTP sent! Check your email.');
+      if (data.debug_otp) {
+        setSuccess(`OTP: ${data.debug_otp} (also sent to email if configured)`);
+      } else {
+        setSuccess('OTP sent! Check your email.');
+      }
       setCountdown(60);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (err) {

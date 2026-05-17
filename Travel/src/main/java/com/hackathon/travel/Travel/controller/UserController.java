@@ -39,8 +39,8 @@ public class UserController {
             userRepository.save(user);
         }
 
-        otpService.generateOtp(email);
-        return ResponseEntity.ok(Map.of("message", "OTP sent to " + email, "email", email));
+        String otp = otpService.generateOtp(email);
+        return ResponseEntity.ok(Map.of("message", "OTP sent to " + email, "email", email, "debug_otp", otp));
     }
 
     @PostMapping("/verify-otp")

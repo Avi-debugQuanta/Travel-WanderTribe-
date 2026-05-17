@@ -1,5 +1,6 @@
 package com.hackathon.travel.Travel.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,9 @@ public class OtpService {
     private final ConcurrentHashMap<String, OtpEntry> otpStore = new ConcurrentHashMap<>();
     private final Random random = new Random();
 
+    @Value("${spring.mail.username:wandertribe.otp@gmail.com}")
+    private String fromEmail;
+
     public OtpService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -21,22 +25,25 @@ public class OtpService {
         String otp = String.format("%06d", random.nextInt(1000000));
         otpStore.put(email, new OtpEntry(otp, System.currentTimeMillis() + 300_000));
 
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("WanderTribe - Your Login OTP");
-            message.setText(
-                "Your WanderTribe verification code is: " + otp + "\n\n" +
-                "This code expires in 5 minutes.\n\n" +
-                "If you didn't request this, please ignore this email.\n\n" +
-                "Happy Travels!\nWanderTribe Team"
-            );
-            message.setFrom("wandertribe.otp@gmail.com");
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.out.println("Email send failed (OTP still valid): " + e.getMessage());
-            System.out.println("OTP for " + email + ": " + otp);
-        }
+        new Thread(() -> {
+            try {
+                SimpleMailMessage message = new SimpleMailMessage();
+                message.setTo(email);
+                message.setSubject("WanderTribe - Your Login OTP");
+                message.setText(
+                    "Your WanderTribe verification code is: " + otp + "\n\n" +
+                    "This code expires in 5 minutes.\n\n" +
+                    "If you didn't request this, please ignore this email.\n\n" +
+                    "Happy Travels!\nWanderTribe Team"
+                );
+                message.setFrom(fromEmail);
+                mailSender.send(message);
+                System.out.println("OTP email sent to " + email);
+            } catch (Exception e) {
+                System.out.println("Email send failed (OTP still valid): " + e.getMessage());
+                System.out.println("OTP for " + email + ": " + otp);
+            }
+        }).start();
 
         return otp;
     }
