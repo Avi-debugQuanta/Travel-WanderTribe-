@@ -7,7 +7,7 @@ export default function RoadProgress({ currentStep, totalSteps, labels }) {
       <div className="relative flex items-center justify-between">
         {/* Road line */}
         <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-2 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full transition-all duration-700 ease-out"
+          <div className="h-full bg-gradient-to-r from-sky-500 to-violet-500 rounded-full transition-all duration-700 ease-out"
             style={{ width: `${progress * 100}%` }} />
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 12px, white 12px, white 24px)',
@@ -25,9 +25,9 @@ export default function RoadProgress({ currentStep, totalSteps, labels }) {
             <div key={i} className="relative z-10 flex flex-col items-center">
               <div className={`w-10 h-10 rounded-full border-3 flex items-center justify-center transition-all duration-500 ${
                 isCurrent
-                  ? 'bg-emerald-500 border-emerald-400 scale-125 shadow-lg shadow-emerald-500/40'
+                  ? 'bg-sky-500 border-sky-400 scale-125 shadow-lg shadow-sky-500/40'
                   : isActive
-                    ? 'bg-emerald-500/80 border-emerald-500/60'
+                    ? 'bg-sky-500/80 border-sky-500/60'
                     : 'bg-slate-800 border-white/20'
               }`}>
                 {isActive ? (
@@ -39,7 +39,7 @@ export default function RoadProgress({ currentStep, totalSteps, labels }) {
                 )}
               </div>
               <span className={`mt-2 text-xs font-medium whitespace-nowrap transition-colors ${
-                isCurrent ? 'text-emerald-400' : isActive ? 'text-white/60' : 'text-white/30'
+                isCurrent ? 'text-sky-400' : isActive ? 'text-white/60' : 'text-white/30'
               }`}>{label}</span>
             </div>
           );

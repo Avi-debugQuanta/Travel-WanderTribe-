@@ -187,7 +187,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
         {TABS.map(([key, label]) => (
           <button key={key} onClick={() => { setTab(key); setExpanded(null); }}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all relative ${
-              tab === key ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
+              tab === key ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
             }`}>
             {label}
             {key === 'PROPOSALS' && pendingProposals.length > 0 && (
@@ -203,7 +203,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
       {tripDays.length > 0 && tab !== 'PROPOSALS' && (
         <div className="mb-4 flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <button onClick={() => setSelectedDate('all')}
-            className={`shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedDate === 'all' ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/50'}`}>
+            className={`shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all ${selectedDate === 'all' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'bg-white/5 text-white/50'}`}>
             All Dates
           </button>
           {tripDays.map(d => {
@@ -211,7 +211,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
             const hasProposal = proposals.some(p => p.proposedDate === d && p.status === 'PENDING');
             return (
               <button key={d} onClick={() => { setSelectedDate(d); setProposalDate(d); }}
-                className={`shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all relative ${selectedDate === d ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/50'}`}>
+                className={`shrink-0 px-4 py-2 rounded-xl text-xs font-medium transition-all relative ${selectedDate === d ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'bg-white/5 text-white/50'}`}>
                 {dayLabel}
                 {hasProposal && <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />}
               </button>
@@ -235,7 +235,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
           )}
           {approvedProposals.length > 0 && (
             <div>
-              <h3 className="text-lg font-bold mb-3 text-emerald-400">Approved (Added to Cart)</h3>
+              <h3 className="text-lg font-bold mb-3 text-sky-400">Approved (Added to Cart)</h3>
               <div className="space-y-3">
                 {approvedProposals.map(p => (
                   <ProposalCard key={p.id} proposal={p} members={members} user={user} onVote={voteOnProposal} />
@@ -268,7 +268,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
             const isPending = proposedNames.has(item.name);
             return (
               <div key={i} className={`bg-white/5 border rounded-xl transition-all overflow-hidden ${
-                isExpanded ? 'border-emerald-500/30 shadow-lg shadow-emerald-500/5' : 'border-white/10 hover:border-emerald-500/20'
+                isExpanded ? 'border-sky-500/30 shadow-lg shadow-sky-500/20' : 'border-white/10 hover:border-sky-500/20'
               }`}>
                 <div className="flex gap-4 p-4 sm:p-5 cursor-pointer" onClick={() => setExpanded(isExpanded ? null : i)}>
                   <div className="w-24 h-24 sm:w-32 sm:h-28 shrink-0 rounded-lg overflow-hidden bg-white/10">
@@ -281,17 +281,17 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
                         {item.location && <p className="text-white/50 text-sm">📍 {item.location}</p>}
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-emerald-400 font-bold text-xl">₹{item.price.toLocaleString()}</span>
+                        <span className="text-sky-400 font-bold text-xl">₹{item.price.toLocaleString()}</span>
                         <span className="text-white/30 text-xs block">/day</span>
                       </div>
                     </div>
                     <p className="text-white/40 text-sm mt-1 line-clamp-2">{item.desc || item.bio}</p>
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <span className="text-yellow-400 text-sm">★ {item.rating}</span>
-                      {item.vibe && <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full">{item.vibe}</span>}
+                      {item.vibe && <span className="text-xs px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded-full">{item.vibe}</span>}
                       {isPending && <span className="text-xs px-2 py-0.5 bg-amber-500/10 text-amber-400 rounded-full">Proposed</span>}
                       {inCart && <span className="text-xs px-2 py-0.5 bg-cyan-500/10 text-cyan-400 rounded-full">In Cart</span>}
-                      {isBooked && <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full">Booked</span>}
+                      {isBooked && <span className="text-xs px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded-full">Booked</span>}
                     </div>
                   </div>
                 </div>
@@ -299,7 +299,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
                 {isExpanded && (
                   <div className="px-4 sm:px-5 pb-5 pt-0 border-t border-white/5 space-y-3 animate-fadeIn">
                     {(item.view || item.feel) && (
-                      <div className="p-3 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 border border-emerald-500/10 rounded-lg">
+                      <div className="p-3 bg-gradient-to-r from-sky-500/10 to-violet-500/5 border border-sky-500/20 rounded-lg">
                         <p className="text-white/60 text-sm italic">"{item.view || item.feel}"</p>
                       </div>
                     )}
@@ -331,7 +331,7 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
                       <div>
                         <label className="text-white/40 text-xs block mb-1">For which date?</label>
                         <select value={proposalDate} onChange={e => setProposalDate(e.target.value)}
-                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:border-emerald-500 focus:outline-none">
+                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:border-sky-500 focus:outline-none">
                           <option value="">Select date</option>
                           {tripDays.map(d => (
                             <option key={d} value={d}>{new Date(d + 'T00:00').toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</option>
@@ -344,11 +344,11 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
                       onClick={(e) => { e.stopPropagation(); proposeItem(item); }}
                       disabled={inCart || isBooked || isPending || adding === item.name}
                       className={`w-full py-3 rounded-xl text-sm font-medium transition-all ${
-                        isBooked ? 'bg-emerald-500/20 text-emerald-400 cursor-default' :
+                        isBooked ? 'bg-sky-500/20 text-sky-400 cursor-default' :
                         inCart ? 'bg-cyan-500/20 text-cyan-400 cursor-default' :
                         isPending ? 'bg-amber-500/20 text-amber-400 cursor-default' :
                         adding === item.name ? 'bg-white/10 text-white/50 cursor-wait' :
-                        'bg-gradient-to-r from-violet-500 to-emerald-500 hover:from-violet-400 hover:to-emerald-400 hover:scale-[1.01] text-white shadow-lg'
+                        'bg-gradient-to-r from-violet-500 to-sky-500 hover:from-violet-400 hover:to-sky-400 hover:scale-[1.01] text-white shadow-lg shadow-sky-500/20'
                       }`}>
                       {isBooked ? '✓ Already Booked' :
                        inCart ? '🛒 In Cart' :
@@ -375,9 +375,9 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
                   <span className="ml-3 text-xs px-2 py-1 rounded-full bg-white/10 text-white/50">{b.type}</span>
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-emerald-400 font-bold">₹{b.price?.toLocaleString()}</span>
+                  <span className="text-sky-400 font-bold">₹{b.price?.toLocaleString()}</span>
                   <span className={`text-xs px-3 py-1 rounded-full ${
-                    b.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-400' :
+                    b.status === 'CONFIRMED' ? 'bg-sky-500/20 text-sky-400' :
                     b.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
                     'bg-yellow-500/20 text-yellow-400'
                   }`}>{b.status}</span>
@@ -404,7 +404,7 @@ function ProposalCard({ proposal, members, user, onVote }) {
 
   return (
     <div className={`p-4 rounded-xl border ${
-      proposal.status === 'APPROVED' ? 'border-emerald-500/30 bg-emerald-500/5' :
+      proposal.status === 'APPROVED' ? 'border-sky-500/30 bg-sky-500/5' :
       proposal.status === 'REJECTED' ? 'border-red-500/30 bg-red-500/5' :
       'border-amber-500/20 bg-white/5'
     }`}>
@@ -423,9 +423,9 @@ function ProposalCard({ proposal, members, user, onVote }) {
               </p>
             </div>
             <div className="text-right">
-              <span className="text-emerald-400 font-bold">₹{proposal.price?.toLocaleString()}</span>
+              <span className="text-sky-400 font-bold">₹{proposal.price?.toLocaleString()}</span>
               <span className={`block text-xs px-2 py-0.5 rounded-full mt-1 ${
-                proposal.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' :
+                proposal.status === 'APPROVED' ? 'bg-sky-500/20 text-sky-400' :
                 proposal.status === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
                 'bg-amber-500/20 text-amber-400'
               }`}>{proposal.status}</span>
@@ -439,7 +439,7 @@ function ProposalCard({ proposal, members, user, onVote }) {
               <span>{rejects} rejected</span>
             </div>
             <div className="h-2 bg-white/10 rounded-full overflow-hidden flex">
-              <div className="bg-emerald-500 transition-all" style={{ width: `${(approves / total) * 100}%` }} />
+              <div className="bg-sky-500 transition-all" style={{ width: `${(approves / total) * 100}%` }} />
               <div className="bg-red-500 transition-all" style={{ width: `${(rejects / total) * 100}%` }} />
             </div>
           </div>
@@ -449,7 +449,7 @@ function ProposalCard({ proposal, members, user, onVote }) {
             <div className="flex gap-2 mt-3">
               <button onClick={() => onVote(proposal.id, 'APPROVE')}
                 className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                  myVote?.vote === 'APPROVE' ? 'bg-emerald-500 text-white' : 'bg-white/5 border border-white/10 text-white/60 hover:border-emerald-500/40 hover:text-emerald-400'
+                  myVote?.vote === 'APPROVE' ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20' : 'bg-white/5 border border-white/10 text-white/60 hover:border-sky-500/40 hover:text-sky-400'
                 }`}>
                 {myVote?.vote === 'APPROVE' ? '✓ Approved' : '👍 Approve'}
               </button>
@@ -467,7 +467,7 @@ function ProposalCard({ proposal, members, user, onVote }) {
             <div className="flex flex-wrap gap-1 mt-2">
               {votes.map((v, i) => (
                 <span key={i} className={`text-xs px-2 py-0.5 rounded-full ${
-                  v.vote === 'APPROVE' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'
+                  v.vote === 'APPROVE' ? 'bg-sky-500/10 text-sky-400' : 'bg-red-500/10 text-red-400'
                 }`}>
                   {v.userName} {v.vote === 'APPROVE' ? '👍' : '👎'}
                 </span>

@@ -172,10 +172,10 @@ export default function TripWizard({ onClose }) {
     <div className="fixed inset-0 z-50 flex flex-col">
       <div className="absolute inset-0 overflow-hidden">
         <img src={bgImg} alt="" className="w-full h-full object-cover animate-kenBurns" key={bgImg} />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/80 via-slate-900/70 to-slate-900/95" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       </div>
 
-      <div className="relative z-10 flex flex-col h-full">
+      <div className="relative z-10 flex flex-col h-full border border-white/10">
         <div className="flex items-center justify-between px-6 py-4">
           <h2 className="text-xl font-bold text-white/80">Plan Your Adventure</h2>
           <button onClick={onClose} className="text-white/40 hover:text-white transition-colors p-2">
@@ -198,12 +198,12 @@ export default function TripWizard({ onClose }) {
                 <p className="text-white/50 mb-6">Pick a destination or type your own</p>
                 <input type="text" value={form.destination} onChange={e => setForm({ ...form, destination: e.target.value })}
                   placeholder="Type a destination..."
-                  className="w-full px-5 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white text-lg placeholder:text-white/40 focus:border-emerald-500 focus:outline-none mb-6" />
+                  className="w-full px-5 py-4 bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl text-white text-lg placeholder:text-white/40 focus:border-sky-500 focus:outline-none mb-6" />
                 <div className="grid grid-cols-3 gap-3">
                   {DESTINATIONS.map(d => (
                     <button key={d.name} onClick={() => selectDestination(d)}
                       className={`group relative h-32 rounded-2xl overflow-hidden border-2 transition-all ${
-                        form.destination === d.name ? 'border-emerald-500 scale-[1.02]' : 'border-transparent hover:border-white/20'
+                        form.destination === d.name ? 'border-sky-500 scale-[1.02]' : 'border-transparent hover:border-white/20'
                       }`}>
                       <img src={d.img} alt={d.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
@@ -212,7 +212,7 @@ export default function TripWizard({ onClose }) {
                         <p className="text-white/60 text-xs">{d.tag}</p>
                       </div>
                       {form.destination === d.name && (
-                        <div className="absolute top-2 right-2 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                        <div className="absolute top-2 right-2 w-6 h-6 bg-sky-500 rounded-full flex items-center justify-center">
                           <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
@@ -244,15 +244,15 @@ export default function TripWizard({ onClose }) {
                       monthsShown={2}
                       inline
                       calendarClassName="!bg-transparent !border-none !font-sans"
-                      dayClassName={() => "!text-white hover:!bg-emerald-500/30 !rounded-lg"}
+                      dayClassName={() => "!text-white hover:!bg-sky-500/30 !rounded-lg"}
                     />
                     {form.startDate && form.endDate && (
                       <div className="mt-3 flex items-center gap-3 text-sm">
-                        <span className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400">
+                        <span className="px-3 py-1.5 bg-sky-500/20 border border-sky-500/50 rounded-lg text-sky-400">
                           {form.startDate}
                         </span>
                         <span className="text-white/30">→</span>
-                        <span className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/30 rounded-lg text-emerald-400">
+                        <span className="px-3 py-1.5 bg-sky-500/20 border border-sky-500/50 rounded-lg text-sky-400">
                           {form.endDate}
                         </span>
                         <span className="text-white/40 ml-2">
@@ -271,7 +271,7 @@ export default function TripWizard({ onClose }) {
                       <button key={p.label} onClick={() => setBudgetRange([p.min, p.max])}
                         className={`p-3 rounded-xl border-2 text-center transition-all ${
                           budgetRange[0] === p.min && budgetRange[1] === p.max
-                            ? 'border-emerald-500 bg-emerald-500/20'
+                            ? 'border-sky-500 bg-sky-500/20'
                             : 'border-white/10 bg-white/5 hover:border-white/20'
                         }`}>
                         <p className="font-bold text-sm">₹{(p.min / 1000)}K-{(p.max / 1000)}K</p>
@@ -282,15 +282,15 @@ export default function TripWizard({ onClose }) {
                   <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
                     <div className="flex justify-between text-sm">
                       <span className="text-white/60">Min: ₹{budgetRange[0].toLocaleString()}</span>
-                      <span className="text-emerald-400 font-bold">₹{budgetRange[0].toLocaleString()} — ₹{budgetRange[1].toLocaleString()}</span>
+                      <span className="text-sky-400 font-bold">₹{budgetRange[0].toLocaleString()} — ₹{budgetRange[1].toLocaleString()}</span>
                       <span className="text-white/60">Max: ₹{budgetRange[1].toLocaleString()}</span>
                     </div>
                     <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={1000} value={budgetRange[0]}
                       onChange={e => setBudgetRange([Math.min(Number(e.target.value), budgetRange[1] - 1000), budgetRange[1]])}
-                      className="w-full accent-emerald-500" />
+                      className="w-full accent-sky-500" />
                     <input type="range" min={BUDGET_MIN} max={BUDGET_MAX} step={1000} value={budgetRange[1]}
                       onChange={e => setBudgetRange([budgetRange[0], Math.max(Number(e.target.value), budgetRange[0] + 1000)])}
-                      className="w-full accent-emerald-500" />
+                      className="w-full accent-sky-500" />
                   </div>
                 </div>
               </div>
@@ -305,7 +305,7 @@ export default function TripWizard({ onClose }) {
                     <button key={s.id} onClick={() => setForm({ ...form, travelStyle: s.id })}
                       className={`p-5 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] ${
                         form.travelStyle === s.id
-                          ? 'border-emerald-500 bg-emerald-500/20'
+                          ? 'border-sky-500/50 bg-sky-500/20'
                           : 'border-white/10 bg-white/5 hover:border-white/20'
                       }`}>
                       <span className="text-3xl block mb-2">{s.icon}</span>
@@ -316,7 +316,7 @@ export default function TripWizard({ onClose }) {
                 </div>
                 <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
                   placeholder="Anything specific you want? (optional)" rows={2}
-                  className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:border-emerald-500 focus:outline-none resize-none" />
+                  className="w-full px-5 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:border-sky-500 focus:outline-none resize-none" />
               </div>
             )}
 
@@ -360,7 +360,7 @@ export default function TripWizard({ onClose }) {
                       }))}
                         className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all hover:scale-105 ${
                           personal.food.includes(f.id)
-                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                            ? 'bg-sky-500/20 border-sky-500/50 text-sky-400'
                             : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
                         }`}>
                         <span className="mr-1.5">{f.icon}</span>{f.label}
@@ -369,7 +369,7 @@ export default function TripWizard({ onClose }) {
                   </div>
                   <input type="text" value={personal.customFood} onChange={e => setPersonal({ ...personal, customFood: e.target.value })}
                     placeholder="+ Add your own (e.g., Rajasthani thali, Maggi lover)"
-                    className="mt-2 w-full px-4 py-2.5 bg-white/5 border border-dashed border-white/15 rounded-xl text-white text-sm placeholder:text-white/25 focus:border-emerald-500 focus:outline-none" />
+                    className="mt-2 w-full px-4 py-2.5 bg-white/5 border border-dashed border-white/15 rounded-xl text-white text-sm placeholder:text-white/25 focus:border-sky-500 focus:outline-none" />
                 </div>
 
                 {/* Fitness Level */}
@@ -452,14 +452,14 @@ export default function TripWizard({ onClose }) {
                 </div>
 
                 {/* Trip Password */}
-                <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
-                  <label className="text-amber-300 text-sm font-semibold mb-2 block">🔐 Trip Password (for friends to join)</label>
+                <div className="p-4 bg-sky-500/5 border border-sky-500/20 rounded-2xl">
+                  <label className="text-sky-400 text-sm font-semibold mb-2 block">🔐 Trip Password (for friends to join)</label>
                   <div className="flex gap-2">
                     <input type="text" value={tripPassword} onChange={e => setTripPassword(e.target.value)}
                       placeholder="Auto-generated if left empty"
-                      className="flex-1 px-4 py-2.5 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-white/25 focus:border-amber-500 focus:outline-none" />
+                      className="flex-1 px-4 py-2.5 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-white/25 focus:border-sky-500 focus:outline-none" />
                     <button onClick={() => setTripPassword(Math.random().toString(36).slice(2, 8).toUpperCase())}
-                      className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium transition-colors">
+                      className="px-4 py-2.5 bg-sky-500/20 hover:bg-sky-500/30 border border-sky-500/30 rounded-xl text-sky-400 text-sm font-medium transition-colors">
                       🎲 Generate
                     </button>
                   </div>
@@ -472,8 +472,8 @@ export default function TripWizard({ onClose }) {
                 {loading ? (
                   <div>
                     <div className="relative w-32 h-32 mx-auto mb-6">
-                      <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20" />
-                      <div className="absolute inset-0 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin" />
+                      <div className="absolute inset-0 rounded-full border-4 border-sky-500/20" />
+                      <div className="absolute inset-0 rounded-full border-4 border-sky-500 border-t-transparent animate-spin" />
                       <span className="absolute inset-0 flex items-center justify-center text-4xl">🚙</span>
                     </div>
                     <p className="text-xl text-white/60">Creating your trip...</p>
@@ -482,17 +482,17 @@ export default function TripWizard({ onClose }) {
                   <div>
                     <div className="text-7xl mb-6">🎉</div>
                     <h3 className="text-4xl font-bold mb-3">Trip Created!</h3>
-                    <p className="text-white/60 text-lg mb-6">Your adventure to <span className="text-emerald-400 font-semibold">{createdTrip.destination}</span> is ready</p>
+                    <p className="text-white/60 text-lg mb-6">Your adventure to <span className="text-sky-400 font-semibold">{createdTrip.destination}</span> is ready</p>
 
-                    <div className="inline-block p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl mb-6">
-                      <p className="text-amber-300 text-sm font-medium mb-1">Trip Password</p>
-                      <p className="text-2xl font-mono font-bold text-amber-400 tracking-widest">{tripPassword}</p>
-                      <p className="text-amber-300/50 text-xs mt-1">Share with friends so they can join</p>
+                    <div className="inline-block p-5 bg-gradient-to-br from-sky-500/10 to-violet-500/10 border border-sky-500/20 rounded-2xl mb-6 shadow-lg shadow-sky-500/20">
+                      <p className="text-sky-400 text-sm font-medium mb-1">Trip Password</p>
+                      <p className="text-2xl font-mono font-bold text-sky-500 tracking-widest">{tripPassword}</p>
+                      <p className="text-sky-400/50 text-xs mt-1">Share with friends so they can join</p>
                     </div>
 
-                    <div className="flex gap-3 justify-center">
+                    <div className="flex gap-3 justify-center flex-wrap">
                       <button onClick={() => navigate(`/trip/${createdTrip.id}`)}
-                        className="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 rounded-2xl font-semibold text-lg transition-all hover:scale-105">
+                        className="px-8 py-4 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 rounded-2xl font-semibold text-lg transition-all hover:scale-105 shadow-lg shadow-sky-500/20">
                         Enter Group Chat
                       </button>
                       <button onClick={() => {
@@ -526,7 +526,7 @@ export default function TripWizard({ onClose }) {
               }
             }}
               disabled={!canNext()}
-              className="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed rounded-xl font-semibold transition-all hover:scale-105">
+              className="px-8 py-3 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:from-sky-500 disabled:hover:to-violet-600 rounded-xl font-semibold transition-all hover:scale-105 shadow-lg shadow-sky-500/20">
               {step === 3 && planType === 'ready' ? 'Create & Generate' : step === 4 ? 'Create Trip' : 'Next'}
             </button>
           </div>

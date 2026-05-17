@@ -57,21 +57,21 @@ function VisualRoadmap({ days, activeDay, onSelectDay }) {
             <button onClick={() => onSelectDay(i)}
               className={`flex flex-col items-center transition-all group ${activeDay === i ? 'scale-110' : 'hover:scale-105'}`}>
               <div className={`relative w-16 h-16 rounded-2xl overflow-hidden border-3 transition-all ${
-                activeDay === i ? 'border-emerald-400 shadow-lg shadow-emerald-500/30' : 'border-white/20 group-hover:border-white/40'
+                activeDay === i ? 'border-sky-400 shadow-lg shadow-sky-500/30' : 'border-white/20 group-hover:border-white/40'
               }`}>
                 <img src={getImgForDay(day.title)} alt="" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                   <span className="text-white font-bold text-sm">Day {day.dayNum}</span>
                 </div>
               </div>
-              <span className={`mt-1.5 text-xs max-w-[80px] truncate ${activeDay === i ? 'text-emerald-400' : 'text-white/40'}`}>
+              <span className={`mt-1.5 text-xs max-w-[80px] truncate ${activeDay === i ? 'text-sky-400' : 'text-white/40'}`}>
                 {day.title.replace(/Day\s*\d+\s*[-:–]?\s*/i, '').slice(0, 20)}
               </span>
             </button>
             {i < days.length - 1 && (
               <div className="flex items-center h-16 px-1">
-                <div className="w-8 h-0.5 bg-gradient-to-r from-emerald-500/60 to-white/10 relative">
-                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[3px] border-b-[3px] border-l-[5px] border-transparent border-l-emerald-500/60" />
+                <div className="w-8 h-0.5 bg-gradient-to-r from-sky-500/60 to-white/10 relative">
+                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[3px] border-b-[3px] border-l-[5px] border-transparent border-l-sky-500/60" />
                 </div>
               </div>
             )}
@@ -265,7 +265,7 @@ export default function Itinerary({ tripId }) {
     <div className="p-4 sm:p-6">
       <div className="flex flex-wrap gap-3 mb-8">
         <button onClick={generateItinerary} disabled={loading}
-          className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50 rounded-xl font-semibold transition-all hover:scale-105 flex items-center gap-2 text-base shadow-lg shadow-emerald-500/20">
+          className="px-6 py-3.5 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 disabled:opacity-50 rounded-xl font-semibold transition-all hover:scale-105 flex items-center gap-2 text-base shadow-lg shadow-sky-500/20">
           {loading ? '⏳ Generating...' : '🤖 Generate AI Itinerary'}
         </button>
         <button onClick={getSeasonInfo} disabled={loading}
@@ -290,7 +290,7 @@ export default function Itinerary({ tripId }) {
           <span className="text-6xl block mb-4">🗓️</span>
           <p className="text-2xl mb-2">No itinerary yet</p>
           <p className="max-w-md mx-auto text-base">Click "Generate AI Itinerary" to create a personalized day-by-day plan based on your group's chat, ideas, and approved bookings.</p>
-          <p className="mt-3 text-sm text-emerald-400/60">Includes bus timings, trains, flights, hotels, food stalls, and local transport.</p>
+          <p className="mt-3 text-sm text-violet-400/60">Includes bus timings, trains, flights, hotels, food stalls, and local transport.</p>
         </div>
       )}
 
@@ -300,17 +300,17 @@ export default function Itinerary({ tripId }) {
 
           {days.length > 0 && activeDay !== null ? (
             <div className="animate-fadeIn">
-              <div className="bg-white/5 border border-emerald-500/20 rounded-2xl overflow-hidden">
+              <div className="bg-white/5 border border-sky-500/20 rounded-2xl overflow-hidden">
                 <div className="relative h-32 overflow-hidden">
                   <img src={getImgForDay(days[activeDay].title)} alt="" className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 to-slate-900/50 flex items-center px-6">
                     <div>
-                      <span className="text-emerald-400 text-sm font-medium">Day {days[activeDay].dayNum}</span>
+                      <span className="text-sky-400 text-sm font-medium">Day {days[activeDay].dayNum}</span>
                       <h3 className="text-2xl font-bold">{days[activeDay].title}</h3>
                       {days[activeDay].places.length > 0 && (
                         <div className="flex gap-2 mt-1">
                           {days[activeDay].places.map((p, j) => (
-                            <span key={j} className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full">{p}</span>
+                            <span key={j} className="text-xs px-2 py-0.5 bg-violet-500/20 text-violet-300 rounded-full">{p}</span>
                           ))}
                         </div>
                       )}
@@ -357,18 +357,18 @@ export default function Itinerary({ tripId }) {
                     <div key={i} className="flex gap-4">
                       <div className="flex flex-col items-center shrink-0">
                         <button onClick={() => setActiveDay(i)}
-                          className="w-10 h-10 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-xs font-bold text-emerald-400 hover:bg-emerald-500/30 transition-colors">
+                          className="w-10 h-10 rounded-full bg-sky-500/20 border-2 border-sky-500/40 flex items-center justify-center text-xs font-bold text-sky-400 hover:bg-sky-500/30 transition-colors">
                           {day.dayNum}
                         </button>
-                        {i < days.length - 1 && <div className="w-0.5 flex-1 bg-gradient-to-b from-emerald-500/40 to-white/5 min-h-[60px]" />}
+                        {i < days.length - 1 && <div className="w-0.5 flex-1 bg-gradient-to-b from-sky-500/40 to-white/5 min-h-[60px]" />}
                       </div>
                       <div className="flex-1 pb-4">
-                        <h4 className="font-bold text-lg text-emerald-400 mb-2">{day.title}</h4>
+                        <h4 className="font-bold text-lg text-sky-400 mb-2">{day.title}</h4>
                         <div className="prose prose-invert prose-sm max-w-none text-white/70">
                           <ReactMarkdown>{day.content.slice(0, 500) + (day.content.length > 500 ? '...' : '')}</ReactMarkdown>
                         </div>
                         {day.content.length > 500 && (
-                          <button onClick={() => setActiveDay(i)} className="text-emerald-400 text-sm mt-2 hover:underline">
+                          <button onClick={() => setActiveDay(i)} className="text-sky-400 text-sm mt-2 hover:underline">
                             Read full day →
                           </button>
                         )}

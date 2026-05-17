@@ -39,7 +39,7 @@ export default function ToastNotifications({ tripId }) {
     MEMBER_JOINED: 'border-cyan-500/40 bg-cyan-500/10',
     NEW_PROPOSAL: 'border-violet-500/40 bg-violet-500/10',
     VOTE_CAST: 'border-amber-500/40 bg-amber-500/10',
-    PROPOSAL_APPROVED: 'border-emerald-500/40 bg-emerald-500/10',
+    PROPOSAL_APPROVED: 'border-sky-500/40 bg-sky-500/10',
     PROPOSAL_REJECTED: 'border-red-500/40 bg-red-500/10',
   };
 
