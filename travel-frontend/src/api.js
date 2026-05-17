@@ -12,11 +12,13 @@ export const tripApi = {
   getById: (id) => api.get(`/trips/${id}`),
   create: (trip) => api.post('/trips', trip),
   update: (id, trip) => api.put(`/trips/${id}`, trip),
-  remove: (id) => api.delete(`/trips/${id}`),
+  remove: (id, email) => api.delete(`/trips/${id}`, { params: email ? { email } : {} }),
   addMember: (tripId, userId) => api.post(`/trips/${tripId}/members/${userId}`),
   invite: (tripId, email) => api.post(`/trips/${tripId}/invite`, { email }),
   getMembers: (tripId) => api.get(`/trips/${tripId}/members`),
-  removeMember: (tripId, userId) => api.delete(`/trips/${tripId}/members/${userId}`),
+  removeMember: (tripId, userId, email) => api.delete(`/trips/${tripId}/members/${userId}`, { params: email ? { email } : {} }),
+  joinTrip: (tripId, email, password) => api.post(`/trips/${tripId}/join`, { email, password }),
+  setPassword: (tripId, password) => api.put(`/trips/${tripId}/password`, { password }),
 };
 
 export const ideaApi = {
@@ -31,9 +33,10 @@ export const ideaApi = {
 export const chatApi = {
   getHistory: (tripId) => api.get(`/trips/${tripId}/chat`),
   send: (tripId, message, userId, userName) => api.post(`/trips/${tripId}/chat`, { message, userId: String(userId || ''), userName: userName || '' }),
-  clearHistory: (tripId) => api.delete(`/trips/${tripId}/chat`),
+  clearHistory: (tripId, email) => api.delete(`/trips/${tripId}/chat`, { params: email ? { email } : {} }),
   curate: (tripId) => api.post(`/trips/${tripId}/curate`),
   getSeason: (tripId) => api.get(`/trips/${tripId}/season`),
+  getAISummary: (tripId) => api.get(`/trips/${tripId}/ai-summary`),
 };
 
 export const userApi = {
@@ -63,5 +66,20 @@ export const walletApi = {
   getBalance: (userId) => api.get(`/wallet/${userId}`),
   addFunds: (userId, amount) => api.post(`/wallet/${userId}/add`, { amount }),
 };
+
+export const proposalApi = {
+  getAll: (tripId) => api.get(`/trips/${tripId}/proposals`),
+  create: (tripId, data) => api.post(`/trips/${tripId}/proposals`, data),
+  vote: (tripId, proposalId, userId, userName, vote) => api.post(`/trips/${tripId}/proposals/${proposalId}/vote`, { userId: String(userId), userName, vote }),
+};
+
+export const WS_BASE = (() => {
+  const loc = window.location;
+  const base = import.meta.env.VITE_API_URL;
+  if (base && base.startsWith('http')) {
+    return base.replace('/api', '');
+  }
+  return loc.origin;
+})();
 
 export default api;

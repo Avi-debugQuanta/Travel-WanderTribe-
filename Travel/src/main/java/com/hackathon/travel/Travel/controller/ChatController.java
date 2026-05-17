@@ -1,18 +1,15 @@
 package com.hackathon.travel.Travel.controller;
 
-import com.hackathon.travel.Travel.models.ChatMessage;
-import com.hackathon.travel.Travel.models.MessageRole;
-import com.hackathon.travel.Travel.models.Idea;
-import com.hackathon.travel.Travel.models.Trip;
-import com.hackathon.travel.Travel.Repository.ChatMessageRepository;
-import com.hackathon.travel.Travel.Repository.IdeaRepository;
-import com.hackathon.travel.Travel.Repository.TripRepository;
+import com.hackathon.travel.Travel.models.*;
+import com.hackathon.travel.Travel.Repository.*;
 import com.hackathon.travel.Travel.service.GeminiService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/trips/{tripId}")
@@ -22,16 +19,25 @@ public class ChatController {
     private final ChatMessageRepository chatMessageRepository;
     private final IdeaRepository ideaRepository;
     private final TripRepository tripRepository;
+    private final BookingRepository bookingRepository;
+    private final BookingProposalRepository proposalRepository;
     private final GeminiService geminiService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public ChatController(ChatMessageRepository chatMessageRepository,
                           IdeaRepository ideaRepository,
                           TripRepository tripRepository,
-                          GeminiService geminiService) {
+                          BookingRepository bookingRepository,
+                          BookingProposalRepository proposalRepository,
+                          GeminiService geminiService,
+                          SimpMessagingTemplate messagingTemplate) {
         this.chatMessageRepository = chatMessageRepository;
         this.ideaRepository = ideaRepository;
         this.tripRepository = tripRepository;
+        this.bookingRepository = bookingRepository;
+        this.proposalRepository = proposalRepository;
         this.geminiService = geminiService;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @PostMapping("/chat")
@@ -49,6 +55,8 @@ public class ChatController {
         List<ChatMessage> result = new ArrayList<>();
         result.add(userMsg);
 
+        messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/chat", (Object) userMsg);
+
         boolean askAI = userText.toLowerCase().contains("@ai");
         if (askAI) {
             String cleanedMessage = userText.replaceAll("(?i)@ai\\s*", "").trim();
@@ -64,6 +72,8 @@ public class ChatController {
             aiMsg.setUserName("WanderTribe AI");
             chatMessageRepository.save(aiMsg);
             result.add(aiMsg);
+
+            messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/chat", (Object) aiMsg);
         }
 
         return ResponseEntity.ok(result);
@@ -124,7 +134,16 @@ public class ChatController {
     }
 
     @DeleteMapping("/chat")
-    public ResponseEntity<Map<String, String>> clearChatHistory(@PathVariable Long tripId) {
+    public ResponseEntity<?> clearChatHistory(@PathVariable Long tripId,
+                                               @RequestParam(required = false) String email) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip != null && email != null) {
+            String leader = trip.getCreatedBy();
+            if (leader != null && !leader.equalsIgnoreCase(email) && !leader.equalsIgnoreCase(email.split("@")[0])) {
+                return ResponseEntity.status(403).body(Map.of("error", "Only the trip leader can clear chat"));
+            }
+        }
+
         List<ChatMessage> messages = chatMessageRepository.findByTripIdOrderByTimestampAsc(tripId);
         chatMessageRepository.deleteAll(messages);
         return ResponseEntity.ok(Map.of("status", "cleared", "count", String.valueOf(messages.size())));
@@ -136,16 +155,87 @@ public class ChatController {
         if (trip == null) return ResponseEntity.notFound().build();
 
         List<Idea> ideas = ideaRepository.findByTripId(tripId);
+        List<ChatMessage> recentChat = chatMessageRepository.findByTripIdOrderByTimestampAsc(tripId);
+        String chatSummary = buildChatSummary(recentChat);
+
+        List<BookingProposal> approvedProposals = proposalRepository.findByTripIdAndStatus(tripId, ProposalStatus.APPROVED);
+        List<Booking> confirmedBookings = bookingRepository.findByTripId(tripId).stream()
+                .filter(b -> b.getStatus() == BookingStatus.CONFIRMED || b.getStatus() == BookingStatus.PENDING)
+                .collect(Collectors.toList());
+
+        String bookingsContext = buildBookingsContext(approvedProposals, confirmedBookings);
+
         String itinerary = geminiService.curateItinerary(
                 trip.getDestination(),
                 trip.getStartDate(),
                 trip.getEndDate(),
                 trip.getBudget(),
                 trip.getTravelStyle(),
-                ideas
+                ideas,
+                chatSummary + "\n\n" + bookingsContext
         );
 
         return ResponseEntity.ok(Map.of("itinerary", itinerary));
+    }
+
+    private String buildBookingsContext(List<BookingProposal> proposals, List<Booking> bookings) {
+        StringBuilder sb = new StringBuilder();
+        if (!proposals.isEmpty() || !bookings.isEmpty()) {
+            sb.append("CONFIRMED/APPROVED BOOKINGS (MUST include these in the itinerary on their specific dates):\n");
+            for (BookingProposal p : proposals) {
+                sb.append("- [").append(p.getItemType()).append("] ").append(p.getItemName())
+                  .append(" on ").append(p.getProposedDate()).append(" - ₹").append(p.getPrice()).append("\n");
+            }
+            for (Booking b : bookings) {
+                sb.append("- [").append(b.getType()).append("] ").append(b.getProviderName())
+                  .append(" - ₹").append(b.getPrice()).append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    @GetMapping("/ai-summary")
+    public ResponseEntity<Map<String, String>> getAISummary(@PathVariable Long tripId) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) return ResponseEntity.notFound().build();
+
+        List<Booking> bookings = bookingRepository.findByTripId(tripId);
+        List<ChatMessage> recentChat = chatMessageRepository.findByTripIdOrderByTimestampAsc(tripId);
+        List<BookingProposal> proposals = proposalRepository.findByTripIdAndStatus(tripId, ProposalStatus.APPROVED);
+
+        double totalSpent = bookings.stream().mapToDouble(Booking::getPrice).sum();
+
+        String prompt = "You are WanderTribe AI. Generate a brief, insightful TRIP SUMMARY ANALYSIS for this trip:\n\n" +
+            "Destination: " + trip.getDestination() + "\n" +
+            "Dates: " + trip.getStartDate() + " to " + trip.getEndDate() + "\n" +
+            "Budget: ₹" + trip.getBudget() + " per person\n" +
+            "Travel Style: " + trip.getTravelStyle() + "\n" +
+            "Total bookings: " + bookings.size() + "\n" +
+            "Total spent so far: ₹" + totalSpent + "\n" +
+            "Approved proposals: " + proposals.size() + "\n\n" +
+            (recentChat.size() > 0 ? "Recent chat topics:\n" + buildChatSummary(recentChat.subList(Math.max(0, recentChat.size()-10), recentChat.size())) + "\n\n" : "") +
+            "Write a brief analysis (3-5 bullet points) covering:\n" +
+            "1. Budget health (are they on track?)\n" +
+            "2. Trip readiness score (1-10)\n" +
+            "3. Key recommendation or missing element\n" +
+            "4. Vibe check based on group chat\n" +
+            "5. One pro tip for the destination\n" +
+            "Keep it concise and fun. Use markdown formatting.";
+
+        String summary = geminiService.chat(prompt, List.of(), "");
+        return ResponseEntity.ok(Map.of("summary", summary));
+    }
+
+    private String buildChatSummary(List<ChatMessage> messages) {
+        if (messages == null || messages.isEmpty()) return "";
+        int start = Math.max(0, messages.size() - 30);
+        StringBuilder sb = new StringBuilder();
+        for (int i = start; i < messages.size(); i++) {
+            ChatMessage m = messages.get(i);
+            String sender = m.getUserName() != null ? m.getUserName() : m.getRole().name();
+            sb.append(sender).append(": ").append(m.getContent()).append("\n");
+        }
+        return sb.toString();
     }
 
     @GetMapping("/season")

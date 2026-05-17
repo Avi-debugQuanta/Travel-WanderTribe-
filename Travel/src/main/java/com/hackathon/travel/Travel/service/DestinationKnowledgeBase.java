@@ -359,6 +359,60 @@ public class DestinationKnowledgeBase {
             - Best time for budget travel: Shoulder seasons (Mar-Apr, Sep-Oct) — low crowd, low prices, decent weather.
             """);
 
+        knowledge.append("\n=== TRANSPORT QUICK REFERENCE (INCLUDE IN ITINERARY) ===\n");
+        knowledge.append("""
+            MAJOR BUS ROUTES (HRTC / HPTDC):
+            - Delhi ISBT Kashmere Gate → Manali: HRTC Volvo departs 5:00 PM, 7:00 PM, 8:30 PM (₹1200-1800, 12-14 hrs)
+            - Delhi → Shimla: HRTC Volvo departs 8:00 PM, 9:00 PM, 10:00 PM (₹800-1200, 8-9 hrs)
+            - Delhi → Dharamshala/McLeodganj: HRTC Volvo 7:00 PM, 8:30 PM (₹1100-1600, 10-12 hrs)
+            - Delhi → Kullu/Bhuntar: Same buses as Manali route, drop at Bhuntar for Kasol
+            - Chandigarh → Manali: HRTC buses from Sector 43, 8:00 AM, 9:00 PM (₹600-1000)
+            - Shimla → Manali: HPTDC Volvo 8:00 AM (₹700-1000, 8 hrs via Mandi)
+            - Manali → Kaza (Spiti): HRTC daily 5:00 AM Jun-Oct only (₹350, 10-12 hrs via Rohtang/Kunzum)
+            - Shimla → Reckong Peo → Kaza: HRTC daily 7:00 AM (₹600, 2-day journey recommended overnight at Peo)
+
+            HPTDC DELUXE COACHES:
+            - Delhi → Manali Super Deluxe: ₹1500-1800, evening departures
+            - Delhi → Shimla Super Deluxe: ₹1000-1300, evening departures
+            - Manali → Leh HPTDC (seasonal Jun-Sep): ₹2500, 2-day journey via Keylong
+
+            RAILWAY STATIONS:
+            - Kalka: Gateway to Shimla (UNESCO Toy Train, ₹300-600, 5-6 hrs, 102 tunnels)
+            - Chandigarh: For Manali, Dharamshala, Kasol — then bus/taxi
+            - Pathankot: For Dharamshala (90km bus ₹200, taxi ₹2000)
+            - Jammu Tawi: For Srinagar/Kashmir (300km, taxi/bus ₹600-2000)
+            - Haridwar/Dehradun: For Rishikesh (30km, bus ₹40, auto ₹150)
+            - Una Himachal: Small station, buses to Dharamshala/Shimla
+
+            KEY TRAINS FROM DELHI:
+            - Kalka Shatabdi (12011): Delhi 7:40 AM → Kalka 11:45 AM (₹700-1500)
+            - Himalayan Queen (14095): Delhi 6:00 AM → Kalka 11:30 AM (₹200-800)
+            - Jammu Rajdhani (12425): Delhi 8:30 PM → Jammu 6:00 AM (₹1200-3000)
+            - Jan Shatabdi Haridwar (12055): Delhi 3:15 PM → Haridwar 7:30 PM (₹300-800)
+            - Pathankot Express: Delhi 9:00 PM → Pathankot 7:00 AM (₹300-600)
+
+            AIRPORTS:
+            - Kullu-Manali (Bhuntar): Flights from Delhi (₹4000-8000), then taxi to Manali 50km (₹1000-1500)
+            - Shimla (Jubbarhatti): Limited flights, small airport
+            - Kangra (Gaggal): For Dharamshala, flights from Delhi (₹3500-7000), taxi 15km (₹500)
+            - Srinagar (Sheikh ul-Alam): Major airport, Delhi flights ₹3000-7000, 1.5 hrs
+            - Leh (Kushok Bakula): Delhi flights ₹4000-10000, only morning flights due to winds
+            - Dehradun (Jolly Grant): For Rishikesh, flights from Delhi (₹3000-6000), taxi 35km (₹800)
+
+            LOCAL TRANSPORT TIPS:
+            - Shared taxis/jeeps: Available at most bus stands, 50-70% cheaper than private
+            - BlaBlaCar: Works for Delhi-Manali, Delhi-Shimla routes
+            - Zoomcar/Revv: Self-drive rentals from Delhi, Chandigarh (₹2000-4000/day)
+            - Local buses: HRTC local ₹20-100, frequent but crowded, great for budget travel
+            
+            EMERGENCY NUMBERS:
+            - Police: 100
+            - Ambulance: 102 / 108
+            - HRTC helpline: 0177-2658765
+            - Himachal Tourism: 0177-2652369
+            - J&K Tourism: 0194-2452690
+            """);
+
         return knowledge.toString();
     }
 }

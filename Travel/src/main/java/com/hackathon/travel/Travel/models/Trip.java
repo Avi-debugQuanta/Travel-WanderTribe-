@@ -36,6 +36,7 @@ public class Trip {
 
     private String travelStyle;
     private String vibePreference;
+    private String tripPassword;
 
     @ManyToMany
     @JoinTable(
@@ -61,6 +62,7 @@ public class Trip {
     public String getDescription() { return description; }
     public String getTravelStyle() { return travelStyle; }
     public String getVibePreference() { return vibePreference; }
+    public String getTripPassword() { return tripPassword; }
     public Set<User> getMembers() { return members; }
 
     public void setId(Long id) { this.id = id; }
@@ -76,5 +78,6 @@ public class Trip {
     public void setDescription(String description) { this.description = description; }
     public void setTravelStyle(String travelStyle) { this.travelStyle = travelStyle; }
     public void setVibePreference(String vibePreference) { this.vibePreference = vibePreference; }
+    public void setTripPassword(String tripPassword) { this.tripPassword = tripPassword; }
     public void setMembers(Set<User> members) { this.members = members; }
 }

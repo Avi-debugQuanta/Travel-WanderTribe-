@@ -1,12 +1,10 @@
 services:
   - type: web
-    name: wandertribe-api
+    name: wandertribe
     runtime: docker
-    dockerfilePath: ./Travel/Dockerfile
-    dockerContext: ./Travel
-    plan: free
+    dockerfilePath: ./Dockerfile
     envVars:
       - key: GEMINI_API_KEY
-        sync: false
+        value: AIzaSyD4DBv28VDq3Y8BjUnDLE6jhS1WVC2zXzw
       - key: GROQ_API_KEY
-        sync: false
+        value: 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

@@ -33,6 +33,7 @@ public class Booking {
     private String providerName;
     private double price;
     private LocalDateTime bookedAt;
+    private String proposedDate;
 
     public Booking() {}
 
@@ -65,4 +66,6 @@ public class Booking {
     public void setProviderName(String providerName) { this.providerName = providerName; }
     public void setPrice(double price) { this.price = price; }
     public void setBookedAt(LocalDateTime bookedAt) { this.bookedAt = bookedAt; }
+    public String getProposedDate() { return proposedDate; }
+    public void setProposedDate(String proposedDate) { this.proposedDate = proposedDate; }
 }

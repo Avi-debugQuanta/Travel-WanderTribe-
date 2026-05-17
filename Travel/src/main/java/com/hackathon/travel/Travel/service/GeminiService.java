@@ -26,7 +26,7 @@ public class GeminiService {
     private String groqApiKey;
 
     private static final String GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent";
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
     private static final String GROQ_URL =
         "https://api.groq.com/openai/v1/chat/completions";
@@ -93,7 +93,8 @@ public class GeminiService {
     }
 
     public String curateItinerary(String destination, String startDate, String endDate,
-                                   String budget, String travelStyle, List<Idea> ideas) {
+                                   String budget, String travelStyle, List<Idea> ideas,
+                                   String chatSummary) {
         String ideasText = ideas.stream()
                 .map(i -> "- [" + i.getCategory() + "] " + i.getTitle() + ": " + i.getDescription()
                         + " (" + i.getVoteCount() + " votes)")
@@ -107,6 +108,8 @@ public class GeminiService {
                 "Dates: " + startDate + " to " + endDate + "\n" +
                 "Budget: ₹" + budget + " per person\n" +
                 "Travel Style: " + travelStyle + "\n\n" +
+                (chatSummary != null && !chatSummary.isBlank() ?
+                    "GROUP DISCUSSION SUMMARY (incorporate places, food stalls, and preferences mentioned):\n" + chatSummary + "\n\n" : "") +
                 "Group members have submitted these ideas and preferences (prioritize by votes):\n" + ideasText + "\n\n" +
                 "Create a comprehensive day-by-day plan that incorporates the highest-voted ideas first. " +
                 "MUST include for each day:\n" +
@@ -117,8 +120,19 @@ public class GeminiService {
                 "5. Total estimated cost for each day\n" +
                 "6. Payment tips for that day's expenses (cash vs UPI vs card)\n" +
                 "7. Any altitude/weather warnings\n\n" +
-                "End with a TOTAL TRIP COST SUMMARY and packing list.\n" +
-                "Format with clear markdown headings and bullet points.";
+                "TRANSPORT SECTION (MANDATORY for each day):\n" +
+                "8. 'Getting There' section with:\n" +
+                "   - Local bus routes and timings (HRTC, state buses)\n" +
+                "   - Volvo/HPTDC deluxe bus options with approximate schedules\n" +
+                "   - Nearest railway station and train options from major cities\n" +
+                "   - Nearest airport and flight connectivity\n" +
+                "   - Taxi/auto fare estimates between checkpoints\n" +
+                "   - Shared cab options and where to find them\n\n" +
+                "End with:\n" +
+                "- TOTAL TRIP COST SUMMARY\n" +
+                "- TRANSPORT QUICK REFERENCE table (bus routes, train stations, airports)\n" +
+                "- Packing list\n" +
+                "Format with clear markdown headings (## Day 1, ## Day 2, etc) and bullet points.";
 
         return callAI(prompt);
     }

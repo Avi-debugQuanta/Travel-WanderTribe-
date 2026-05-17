@@ -33,6 +33,7 @@ public class CartItem {
     private String itemDetails;
 
     private LocalDateTime addedAt;
+    private String proposedDate;
 
     public CartItem() {}
 
@@ -68,4 +69,6 @@ public class CartItem {
     public void setNegotiated(boolean negotiated) { this.negotiated = negotiated; }
     public void setItemDetails(String itemDetails) { this.itemDetails = itemDetails; }
     public void setAddedAt(LocalDateTime addedAt) { this.addedAt = addedAt; }
+    public String getProposedDate() { return proposedDate; }
+    public void setProposedDate(String proposedDate) { this.proposedDate = proposedDate; }
 }

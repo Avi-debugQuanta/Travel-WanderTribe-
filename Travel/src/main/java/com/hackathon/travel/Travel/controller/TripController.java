@@ -5,6 +5,7 @@ import com.hackathon.travel.Travel.models.User;
 import com.hackathon.travel.Travel.Repository.TripRepository;
 import com.hackathon.travel.Travel.Repository.UserRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
@@ -17,10 +18,13 @@ public class TripController {
 
     private final TripRepository tripRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    public TripController(TripRepository tripRepository, UserRepository userRepository) {
+    public TripController(TripRepository tripRepository, UserRepository userRepository,
+                          SimpMessagingTemplate messagingTemplate) {
         this.tripRepository = tripRepository;
         this.userRepository = userRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     @PostMapping
@@ -58,13 +62,60 @@ public class TripController {
         }).orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTrip(@PathVariable Long id) {
-        if (tripRepository.existsById(id)) {
-            tripRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
+    @PostMapping("/{tripId}/join")
+    public ResponseEntity<?> joinTrip(@PathVariable Long tripId, @RequestBody Map<String, String> body) {
+        try {
+            String email = body.get("email");
+            String password = body.get("password");
+            Trip trip = tripRepository.findById(tripId).orElse(null);
+            if (trip == null) return ResponseEntity.notFound().build();
+
+            if (trip.getTripPassword() != null && !trip.getTripPassword().isBlank()) {
+                if (password == null || !password.equals(trip.getTripPassword())) {
+                    return ResponseEntity.status(403).body(Map.of("error", "Wrong trip password"));
+                }
+            }
+
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setName(body.getOrDefault("name", email.split("@")[0]));
+                user = userRepository.save(user);
+            }
+
+            trip.getMembers().add(user);
+            tripRepository.save(trip);
+
+            messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/notifications",
+                (Object) Map.of("type", "MEMBER_JOINED", "message", user.getName() + " joined the trip!"));
+
+            return ResponseEntity.ok(Map.of("message", user.getName() + " joined the trip!", "tripId", tripId));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to join trip: " + e.getMessage()));
         }
-        return ResponseEntity.notFound().build();
+    }
+
+    @PutMapping("/{tripId}/password")
+    public ResponseEntity<?> setTripPassword(@PathVariable Long tripId, @RequestBody Map<String, String> body) {
+        Trip trip = tripRepository.findById(tripId).orElse(null);
+        if (trip == null) return ResponseEntity.notFound().build();
+        trip.setTripPassword(body.get("password"));
+        tripRepository.save(trip);
+        return ResponseEntity.ok(Map.of("message", "Password updated"));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTrip(@PathVariable Long id, @RequestParam(required = false) String email) {
+        Trip trip = tripRepository.findById(id).orElse(null);
+        if (trip == null) return ResponseEntity.notFound().build();
+
+        if (email != null && !isLeader(trip, email)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only the trip leader can delete this trip"));
+        }
+
+        tripRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{tripId}/members/{userId}")
@@ -73,23 +124,38 @@ public class TripController {
         User user = userRepository.findById(userId).orElse(null);
         if (trip == null || user == null) return ResponseEntity.notFound().build();
         trip.getMembers().add(user);
+
+        messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/notifications",
+            (Object) Map.of("type", "MEMBER_JOINED", "message", user.getName() + " joined the trip!"));
+
         return ResponseEntity.ok(tripRepository.save(trip));
     }
 
     @PostMapping("/{tripId}/invite")
     public ResponseEntity<?> inviteMember(@PathVariable Long tripId, @RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        Trip trip = tripRepository.findById(tripId).orElse(null);
-        if (trip == null) return ResponseEntity.notFound().build();
+        try {
+            String email = body.get("email");
+            Trip trip = tripRepository.findById(tripId).orElse(null);
+            if (trip == null) return ResponseEntity.notFound().build();
 
-        User user = userRepository.findByEmail(email).orElse(null);
-        if (user == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "No user found with email: " + email));
+            User user = userRepository.findByEmail(email).orElse(null);
+            if (user == null) {
+                user = new User();
+                user.setEmail(email);
+                user.setName(email.split("@")[0]);
+                user = userRepository.save(user);
+            }
+
+            trip.getMembers().add(user);
+            tripRepository.save(trip);
+
+            messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/notifications",
+                (Object) Map.of("type", "MEMBER_JOINED", "message", user.getName() + " was invited to the trip!"));
+
+            return ResponseEntity.ok(Map.of("message", user.getName() + " added to trip", "members", trip.getMembers()));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to invite: " + e.getMessage()));
         }
-
-        trip.getMembers().add(user);
-        tripRepository.save(trip);
-        return ResponseEntity.ok(Map.of("message", user.getName() + " added to trip", "members", trip.getMembers()));
     }
 
     @GetMapping("/{tripId}/members")
@@ -100,11 +166,23 @@ public class TripController {
     }
 
     @DeleteMapping("/{tripId}/members/{userId}")
-    public ResponseEntity<?> removeMember(@PathVariable Long tripId, @PathVariable Long userId) {
+    public ResponseEntity<?> removeMember(@PathVariable Long tripId, @PathVariable Long userId,
+                                           @RequestParam(required = false) String email) {
         Trip trip = tripRepository.findById(tripId).orElse(null);
         if (trip == null) return ResponseEntity.notFound().build();
+
+        if (email != null && !isLeader(trip, email)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only the trip leader can remove members"));
+        }
+
         trip.getMembers().removeIf(u -> u.getId().equals(userId));
         tripRepository.save(trip);
         return ResponseEntity.ok(Map.of("message", "Member removed", "members", trip.getMembers()));
+    }
+
+    private boolean isLeader(Trip trip, String email) {
+        if (trip.getCreatedBy() == null) return false;
+        return trip.getCreatedBy().equalsIgnoreCase(email) ||
+               trip.getCreatedBy().equalsIgnoreCase(email.split("@")[0]);
     }
 }

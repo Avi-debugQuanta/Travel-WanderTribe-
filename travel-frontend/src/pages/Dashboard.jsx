@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { tripApi, walletApi, bookingApi } from '../api';
+import TripWizard from '../components/TripWizard';
 
 const DESTINATION_IMAGES = {
   'manali': 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=600',
@@ -48,6 +49,7 @@ export default function Dashboard() {
   const [trips, setTrips] = useState([]);
   const [wallet, setWallet] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const [form, setForm] = useState({ destination: '', startDate: '', endDate: '', budget: '', travelStyle: '', description: '' });
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || 'null');
@@ -90,9 +92,9 @@ export default function Dashboard() {
                 <p className="text-white/40 text-sm">Wallet</p>
               </div>
             )}
-            <button onClick={() => setShowForm(!showForm)}
+            <button onClick={() => setWizardOpen(true)}
               className="px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-2xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
-              {showForm ? 'Cancel' : '+ New Trip'}
+              + New Trip
             </button>
           </div>
         </div>
@@ -157,7 +159,7 @@ export default function Dashboard() {
             <span className="text-7xl block mb-6">🏔️</span>
             <p className="text-2xl font-semibold mb-2">No trips yet</p>
             <p className="text-lg">Create your first mountain adventure!</p>
-            <button onClick={() => setShowForm(true)}
+            <button onClick={() => setWizardOpen(true)}
               className="mt-6 px-6 py-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl hover:bg-emerald-500/30 transition-colors text-base font-medium">
               + Plan Your First Trip
             </button>
@@ -221,7 +223,7 @@ export default function Dashboard() {
         <p className="text-white/40 text-base mb-6">Tap to create a trip to any of these incredible places</p>
         <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {SUGGESTED.map((dest, i) => (
-            <button key={i} onClick={() => { setForm({ ...form, destination: dest.name }); setShowForm(true); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            <button key={i} onClick={() => { setWizardOpen(true); }}
               className="shrink-0 w-44 sm:w-52 group">
               <div className="h-32 sm:h-36 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:border-emerald-500/30 transition-all">
                 <img src={dest.img} alt={dest.name} loading="lazy"
@@ -233,6 +235,8 @@ export default function Dashboard() {
           ))}
         </div>
       </div>
+
+      {wizardOpen && <TripWizard onClose={() => { setWizardOpen(false); tripApi.getAll().then(r => setTrips(r.data)); }} />}
     </div>
   );
 }
