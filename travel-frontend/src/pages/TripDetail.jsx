@@ -277,7 +277,7 @@ export default function TripDetail() {
             <div className="mt-4 pt-4 border-t border-white/10">
               <p className="text-white/40 text-sm mb-2">Share invite link</p>
               <button onClick={() => {
-                const link = `${window.location.origin}/trip/${id}`;
+                const link = `${window.location.href.split('#')[0]}#/trip/${id}`;
                 const pw = trip?.tripPassword ? `\nPassword: ${trip.tripPassword}` : '';
                 const text = `Join my trip to ${trip?.destination || 'an adventure'} on WanderTribe! ${link}${pw}`;
                 window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');

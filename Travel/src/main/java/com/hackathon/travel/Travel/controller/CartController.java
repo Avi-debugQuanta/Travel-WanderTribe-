@@ -16,7 +16,7 @@ import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("/api/cart")
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(originPatterns = "*")
 public class CartController {
 
     private final CartItemRepository cartItemRepository;

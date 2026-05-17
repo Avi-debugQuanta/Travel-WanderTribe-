@@ -496,7 +496,7 @@ export default function TripWizard({ onClose }) {
                         Enter Group Chat
                       </button>
                       <button onClick={() => {
-                        const link = `${window.location.origin}/trip/${createdTrip.id}`;
+                        const link = `${window.location.href.split('#')[0]}#/trip/${createdTrip.id}`;
                         const text = `Join my trip to ${createdTrip.destination} on WanderTribe!\n${link}\nPassword: ${tripPassword}`;
                         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                       }}

@@ -32,7 +32,7 @@ export default function Navbar() {
   const logout = () => {
     localStorage.removeItem('user');
     setUser(null);
-    window.location.href = '/';
+    window.location.href = window.location.href.split('#')[0] + '#/';
   };
 
   const addFunds = async () => {
