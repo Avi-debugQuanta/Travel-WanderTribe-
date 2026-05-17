@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Component } from 'react';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
@@ -21,10 +21,9 @@ class ErrorBoundary extends Component {
 }
 
 function App() {
-  const basename = import.meta.env.BASE_URL || '/';
   return (
     <ErrorBoundary>
-      <Router basename={basename}>
+      <Router>
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white">
           <Navbar />
           <Routes>
