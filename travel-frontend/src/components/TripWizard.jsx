@@ -26,6 +26,58 @@ const STYLES = [
   { id: 'offroad', icon: '🚙', label: 'Offroad', desc: 'Jeep trails, wild camping' },
 ];
 
+const FOOD_OPTIONS = [
+  { id: 'veg', icon: '🥗', label: 'Vegetarian' },
+  { id: 'nonveg', icon: '🍗', label: 'Non-Veg' },
+  { id: 'vegan', icon: '🌱', label: 'Vegan' },
+  { id: 'jain', icon: '🙏', label: 'Jain' },
+  { id: 'eggetarian', icon: '🥚', label: 'Eggetarian' },
+  { id: 'streetfood', icon: '🍜', label: 'Street Food' },
+  { id: 'anything', icon: '🍽️', label: 'Anything Goes' },
+];
+
+const FITNESS_OPTIONS = [
+  { id: 'easy', icon: '🚶', label: 'Easy', desc: 'Light walks, scenic drives' },
+  { id: 'moderate', icon: '🥾', label: 'Moderate', desc: '2-4 hour treks, some hills' },
+  { id: 'active', icon: '⛰️', label: 'Active', desc: 'Full-day treks, passes' },
+  { id: 'hardcore', icon: '🧗', label: 'Hardcore', desc: 'High altitude, multi-day' },
+];
+
+const VISIT_OPTIONS = [
+  { id: 'temples', icon: '🛕', label: 'Temples' },
+  { id: 'lakes', icon: '🏞️', label: 'Lakes' },
+  { id: 'cafes', icon: '☕', label: 'Cafes' },
+  { id: 'viewpoints', icon: '🌄', label: 'Viewpoints' },
+  { id: 'waterfalls', icon: '💧', label: 'Waterfalls' },
+  { id: 'markets', icon: '🛍️', label: 'Markets' },
+  { id: 'monasteries', icon: '🕉️', label: 'Monasteries' },
+  { id: 'camping', icon: '⛺', label: 'Camping' },
+  { id: 'hotsprings', icon: '♨️', label: 'Hot Springs' },
+  { id: 'wildlife', icon: '🦅', label: 'Wildlife' },
+  { id: 'snowpoints', icon: '❄️', label: 'Snow Points' },
+  { id: 'paragliding', icon: '🪂', label: 'Paragliding' },
+];
+
+const GROUP_OPTIONS = [
+  { id: 'solo', icon: '🧍', label: 'Solo', desc: 'Just me' },
+  { id: 'couple', icon: '💑', label: 'Couple', desc: '2 people' },
+  { id: 'small', icon: '👫', label: 'Small Group', desc: '3-5 friends' },
+  { id: 'large', icon: '👨‍👩‍👧‍👦', label: 'Large Group', desc: '6+ people' },
+  { id: 'family', icon: '👪', label: 'Family', desc: 'With kids/elders' },
+];
+
+const SPECIAL_OPTIONS = [
+  { id: 'kids', icon: '👶', label: 'Kids' },
+  { id: 'elderly', icon: '👴', label: 'Elderly' },
+  { id: 'altitude', icon: '🏔️', label: 'Altitude Concern' },
+  { id: 'wheelchair', icon: '♿', label: 'Wheelchair' },
+  { id: 'pets', icon: '🐕', label: 'Pet-Friendly' },
+  { id: 'budget', icon: '💰', label: 'Strict Budget' },
+  { id: 'photography', icon: '📸', label: 'Photography' },
+  { id: 'nightlife', icon: '🌙', label: 'Nightlife' },
+  { id: 'none', icon: '✅', label: 'Nothing Special' },
+];
+
 const STEP_LABELS = ['Destination', 'Dates', 'Style', 'Plan Type', 'Details', 'Ready!'];
 
 const BUDGET_MIN = 5000;
@@ -46,7 +98,9 @@ export default function TripWizard({ onClose }) {
   const [budgetRange, setBudgetRange] = useState([10000, 25000]);
   const [bgImg, setBgImg] = useState(DESTINATIONS[0].img);
   const [planType, setPlanType] = useState('');
-  const [personal, setPersonal] = useState({ food: '', fitness: '', mustVisit: '', groupSize: '', special: '' });
+  const [personal, setPersonal] = useState({
+    food: [], fitness: '', mustVisit: [], groupSize: '', special: [], customFood: '', customVisit: '',
+  });
   const [tripPassword, setTripPassword] = useState('');
   const [createdTrip, setCreatedTrip] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -85,7 +139,7 @@ export default function TripWizard({ onClose }) {
     setTripPassword(pw);
     try {
       const desc = planType === 'personal'
-        ? `Food: ${personal.food}, Fitness: ${personal.fitness}, Must visit: ${personal.mustVisit}, Group: ${personal.groupSize}, Special: ${personal.special}`
+        ? `Food: ${[...personal.food, personal.customFood].filter(Boolean).join(', ')}, Fitness: ${personal.fitness}, Must visit: ${[...personal.mustVisit, personal.customVisit].filter(Boolean).join(', ')}, Group: ${personal.groupSize}, Special: ${personal.special.join(', ') || 'nothing'}`
         : form.description;
       const { data } = await tripApi.create({
         ...form, budget: String(budgetRange[1]), description: desc, createdBy: user?.name, tripPassword: pw,
@@ -292,28 +346,123 @@ export default function TripWizard({ onClose }) {
             )}
 
             {step === 4 && (
-              <div className="animate-slideRight space-y-5">
-                <h3 className="text-3xl font-bold mb-2">Quick Questions</h3>
-                <p className="text-white/50 mb-4">Help us customize your itinerary</p>
-                {[
-                  { key: 'food', label: 'Food preference?', placeholder: 'Veg, non-veg, vegan, street food...' },
-                  { key: 'fitness', label: 'Group fitness level?', placeholder: 'Easy walks, moderate treks, hardcore...' },
-                  { key: 'mustVisit', label: 'Must-visit type?', placeholder: 'Temples, lakes, cafes, viewpoints...' },
-                  { key: 'groupSize', label: 'Group size?', placeholder: '2 friends, family of 5, solo...' },
-                  { key: 'special', label: 'Special needs?', placeholder: 'Kids, elderly, altitude concerns...' },
-                ].map((q, i) => (
-                  <div key={q.key} className="animate-fadeIn" style={{ animationDelay: `${i * 100}ms` }}>
-                    <label className="text-white/70 text-sm font-medium mb-1.5 block">{q.label}</label>
-                    <input type="text" value={personal[q.key]} onChange={e => setPersonal({ ...personal, [q.key]: e.target.value })}
-                      placeholder={q.placeholder}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder:text-white/30 focus:border-emerald-500 focus:outline-none" />
-                  </div>
-                ))}
+              <div className="animate-slideRight space-y-6">
+                <h3 className="text-3xl font-bold mb-1">Personalize Your Trip</h3>
+                <p className="text-white/50 mb-2">Select what suits you — or add your own</p>
+
+                {/* Food Preference */}
                 <div>
-                  <label className="text-white/70 text-sm font-medium mb-1.5 block">Trip Password (for friends to join)</label>
-                  <input type="text" value={tripPassword} onChange={e => setTripPassword(e.target.value)}
-                    placeholder="Auto-generated if left empty"
-                    className="w-full px-4 py-3 bg-white/10 border border-white/15 rounded-xl text-white placeholder:text-white/30 focus:border-amber-500 focus:outline-none" />
+                  <label className="text-white/70 text-sm font-semibold mb-2 block">🍽️ Food Preference</label>
+                  <div className="flex flex-wrap gap-2">
+                    {FOOD_OPTIONS.map(f => (
+                      <button key={f.id} onClick={() => setPersonal(p => ({
+                        ...p, food: p.food.includes(f.id) ? p.food.filter(x => x !== f.id) : [...p.food, f.id]
+                      }))}
+                        className={`px-4 py-2.5 rounded-xl border text-sm font-medium transition-all hover:scale-105 ${
+                          personal.food.includes(f.id)
+                            ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                            : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
+                        }`}>
+                        <span className="mr-1.5">{f.icon}</span>{f.label}
+                      </button>
+                    ))}
+                  </div>
+                  <input type="text" value={personal.customFood} onChange={e => setPersonal({ ...personal, customFood: e.target.value })}
+                    placeholder="+ Add your own (e.g., Rajasthani thali, Maggi lover)"
+                    className="mt-2 w-full px-4 py-2.5 bg-white/5 border border-dashed border-white/15 rounded-xl text-white text-sm placeholder:text-white/25 focus:border-emerald-500 focus:outline-none" />
+                </div>
+
+                {/* Fitness Level */}
+                <div>
+                  <label className="text-white/70 text-sm font-semibold mb-2 block">💪 Fitness Level</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {FITNESS_OPTIONS.map(f => (
+                      <button key={f.id} onClick={() => setPersonal({ ...personal, fitness: f.id })}
+                        className={`p-3 rounded-xl border-2 text-center transition-all hover:scale-105 ${
+                          personal.fitness === f.id
+                            ? 'border-cyan-500 bg-cyan-500/20'
+                            : 'border-white/10 bg-white/5 hover:border-white/20'
+                        }`}>
+                        <span className="text-2xl block mb-1">{f.icon}</span>
+                        <p className="font-bold text-xs">{f.label}</p>
+                        <p className="text-white/40 text-[10px] mt-0.5">{f.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Must Visit */}
+                <div>
+                  <label className="text-white/70 text-sm font-semibold mb-2 block">📍 Must-Visit Places (select multiple)</label>
+                  <div className="flex flex-wrap gap-2">
+                    {VISIT_OPTIONS.map(v => (
+                      <button key={v.id} onClick={() => setPersonal(p => ({
+                        ...p, mustVisit: p.mustVisit.includes(v.id) ? p.mustVisit.filter(x => x !== v.id) : [...p.mustVisit, v.id]
+                      }))}
+                        className={`px-3.5 py-2 rounded-xl border text-sm font-medium transition-all hover:scale-105 ${
+                          personal.mustVisit.includes(v.id)
+                            ? 'bg-violet-500/20 border-violet-500 text-violet-300'
+                            : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
+                        }`}>
+                        <span className="mr-1">{v.icon}</span>{v.label}
+                      </button>
+                    ))}
+                  </div>
+                  <input type="text" value={personal.customVisit} onChange={e => setPersonal({ ...personal, customVisit: e.target.value })}
+                    placeholder="+ Add your own (e.g., Rohtang Pass, Hidimba Temple)"
+                    className="mt-2 w-full px-4 py-2.5 bg-white/5 border border-dashed border-white/15 rounded-xl text-white text-sm placeholder:text-white/25 focus:border-violet-500 focus:outline-none" />
+                </div>
+
+                {/* Group Size */}
+                <div>
+                  <label className="text-white/70 text-sm font-semibold mb-2 block">👥 Group Size</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {GROUP_OPTIONS.map(g => (
+                      <button key={g.id} onClick={() => setPersonal({ ...personal, groupSize: g.id })}
+                        className={`p-3 rounded-xl border-2 text-center transition-all hover:scale-105 ${
+                          personal.groupSize === g.id
+                            ? 'border-amber-500 bg-amber-500/20'
+                            : 'border-white/10 bg-white/5 hover:border-white/20'
+                        }`}>
+                        <span className="text-xl block mb-1">{g.icon}</span>
+                        <p className="font-bold text-[11px]">{g.label}</p>
+                        <p className="text-white/40 text-[10px]">{g.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Special Needs */}
+                <div>
+                  <label className="text-white/70 text-sm font-semibold mb-2 block">⚡ Special Requirements</label>
+                  <div className="flex flex-wrap gap-2">
+                    {SPECIAL_OPTIONS.map(s => (
+                      <button key={s.id} onClick={() => setPersonal(p => ({
+                        ...p, special: p.special.includes(s.id) ? p.special.filter(x => x !== s.id) : [...p.special, s.id]
+                      }))}
+                        className={`px-3.5 py-2 rounded-xl border text-sm font-medium transition-all hover:scale-105 ${
+                          personal.special.includes(s.id)
+                            ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                            : 'bg-white/5 border-white/10 text-white/60 hover:border-white/30'
+                        }`}>
+                        <span className="mr-1">{s.icon}</span>{s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Trip Password */}
+                <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
+                  <label className="text-amber-300 text-sm font-semibold mb-2 block">🔐 Trip Password (for friends to join)</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={tripPassword} onChange={e => setTripPassword(e.target.value)}
+                      placeholder="Auto-generated if left empty"
+                      className="flex-1 px-4 py-2.5 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-white/25 focus:border-amber-500 focus:outline-none" />
+                    <button onClick={() => setTripPassword(Math.random().toString(36).slice(2, 8).toUpperCase())}
+                      className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium transition-colors">
+                      🎲 Generate
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
