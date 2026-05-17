@@ -4,21 +4,20 @@ import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 import ReactMarkdown from 'react-markdown';
 
-const SUGGESTIONS = [
-  'Suggest offbeat places near my destination',
-  'Best local food and dhabas to try?',
-  'What\'s the best season to visit?',
-  'Recommend a 3-day itinerary',
-  'Hidden gems and secret spots',
-  'Local transport tips and costs',
-  'Which hotel should I book within my budget?',
-  'Is it safe to travel by road at night?',
+const AI_SUGGESTIONS = [
+  '🏔️ Best places to visit near my destination?',
+  '🍜 Must-try local food and dhabas?',
+  '🏨 Hotel recommendations within budget?',
+  '🗓️ Suggest a day-by-day itinerary',
+  '💡 Hidden gems and offbeat spots',
+  '🚗 Transport tips and road conditions',
 ];
 
 export default function ChatBot({ tripId, members = [] }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [wsConnected, setWsConnected] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const stompRef = useRef(null);
@@ -31,21 +30,27 @@ export default function ChatBot({ tripId, members = [] }) {
       r.data.forEach(m => { if (m.id) seenIds.current.add(m.id); });
     });
 
-    const client = new Client({
-      webSocketFactory: () => new SockJS(WS_BASE + '/ws'),
-      reconnectDelay: 3000,
-      onConnect: () => {
-        client.subscribe(`/topic/trip/${tripId}/chat`, (msg) => {
-          const data = JSON.parse(msg.body);
-          if (data.id && seenIds.current.has(data.id)) return;
-          if (data.id) seenIds.current.add(data.id);
-          setMessages(prev => [...prev, data]);
-        });
-      },
-      onStompError: () => {},
-    });
-    client.activate();
-    stompRef.current = client;
+    try {
+      const client = new Client({
+        webSocketFactory: () => new SockJS(WS_BASE + '/ws'),
+        reconnectDelay: 5000,
+        onConnect: () => {
+          setWsConnected(true);
+          client.subscribe(`/topic/trip/${tripId}/chat`, (msg) => {
+            const data = JSON.parse(msg.body);
+            if (data.id && seenIds.current.has(data.id)) return;
+            if (data.id) seenIds.current.add(data.id);
+            setMessages(prev => [...prev, data]);
+          });
+        },
+        onStompError: () => setWsConnected(false),
+        onWebSocketClose: () => setWsConnected(false),
+      });
+      client.activate();
+      stompRef.current = client;
+    } catch {
+      setWsConnected(false);
+    }
 
     return () => {
       if (stompRef.current) stompRef.current.deactivate();
@@ -62,20 +67,41 @@ export default function ChatBot({ tripId, members = [] }) {
     if (askAI && !msg.toLowerCase().includes('@ai')) {
       msg = '@ai ' + msg;
     }
+
+    const userMsg = {
+      role: 'USER',
+      content: msg.replace(/^@ai\s*/i, ''),
+      userName: user?.name || 'You',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(askAI);
+
     try {
       const { data } = await chatApi.send(tripId, msg, user?.id, user?.name);
-      data.forEach(m => { if (m.id) seenIds.current.add(m.id); });
+      const newMsgs = data.filter(m => m.id && !seenIds.current.has(m.id));
+      newMsgs.forEach(m => seenIds.current.add(m.id));
+
+      setMessages(prev => {
+        const withoutOptimistic = prev.filter(p => p !== userMsg);
+        const existing = new Set(withoutOptimistic.filter(p => p.id).map(p => p.id));
+        const toAdd = data.filter(m => !existing.has(m.id));
+        return [...withoutOptimistic, ...toAdd];
+      });
     } catch {
-      setMessages(prev => [...prev, { role: 'AI', content: 'Sorry, something went wrong. Please try again.', userName: 'WanderTribe AI' }]);
+      setMessages(prev => [...prev, {
+        role: 'AI',
+        content: 'Sorry, something went wrong. The AI might be waking up — try again in a moment.',
+        userName: 'WanderTribe AI'
+      }]);
     }
     setLoading(false);
     inputRef.current?.focus();
   };
 
   const clearChat = async () => {
-    if (!confirm('Clear entire chat history for this trip? This cannot be undone.')) return;
+    if (!confirm('Clear entire chat history?')) return;
     try {
       await chatApi.clearHistory(tripId, user?.email);
       setMessages([]);
@@ -85,10 +111,7 @@ export default function ChatBot({ tripId, members = [] }) {
     }
   };
 
-  const getInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
-  };
+  const getInitials = (name) => name ? name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) : '?';
 
   const getAvatarColor = (name) => {
     if (!name) return 'bg-white/20';
@@ -102,8 +125,8 @@ export default function ChatBot({ tripId, members = [] }) {
     <div className="flex flex-col h-[600px] sm:h-[650px]">
       <div className="flex items-center justify-between px-4 sm:px-6 py-2 border-b border-white/10">
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-emerald-400 text-base font-semibold">Live Group Chat</span>
+          <div className={`w-2 h-2 rounded-full ${wsConnected ? 'bg-emerald-400' : 'bg-amber-400'} animate-pulse`} />
+          <span className="text-emerald-400 text-base font-semibold">Group Chat</span>
           {members.length > 0 && (
             <div className="flex -space-x-2 ml-2">
               {members.slice(0, 4).map((m, i) => (
@@ -111,39 +134,32 @@ export default function ChatBot({ tripId, members = [] }) {
                   {getInitials(m.name)}
                 </div>
               ))}
-              {members.length > 4 && (
-                <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs border-2 border-slate-900">
-                  +{members.length - 4}
-                </div>
-              )}
             </div>
           )}
           <span className="text-white/30 text-sm ml-2">{messages.length} msgs</span>
         </div>
         {messages.length > 0 && (
-          <button onClick={clearChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-            Clear
+          <button onClick={clearChat} className="text-xs text-red-400/70 hover:text-red-400 hover:bg-red-500/10 px-3 py-1.5 rounded-lg transition-colors">
+            🗑️ Clear
           </button>
         )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
         {messages.length === 0 && (
-          <div className="text-center py-8 sm:py-10">
+          <div className="text-center py-8">
             <div className="w-16 h-16 mx-auto mb-4 bg-emerald-500/10 rounded-2xl flex items-center justify-center">
-              <span className="text-3xl">💬</span>
+              <span className="text-3xl">🤖</span>
             </div>
-            <h3 className="text-2xl font-bold mb-2">Live Group Chat</h3>
-            <p className="text-white/40 mb-2 text-base sm:text-lg max-w-md mx-auto">
-              Chat with your trip crew in real-time! Use the <span className="text-emerald-400 font-medium">Ask AI</span> button to get travel suggestions.
+            <h3 className="text-2xl font-bold mb-2">AI Travel Assistant</h3>
+            <p className="text-white/40 mb-1 text-base max-w-md mx-auto">
+              Ask me anything about your trip! I know every hidden gem, dhaba, and mountain pass.
             </p>
-            <p className="text-white/30 text-sm mb-6">Messages appear instantly for all members</p>
-            <div className="flex flex-wrap gap-3 justify-center max-w-lg mx-auto">
-              {SUGGESTIONS.slice(0, 4).map((s, i) => (
-                <button key={i} onClick={() => sendMessage(s, true)}
-                  className="px-4 sm:px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm sm:text-base hover:bg-emerald-500/20 transition-all hover:scale-105">
+            <p className="text-white/30 text-sm mb-6">Your group members can also chat here in real-time.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-lg mx-auto">
+              {AI_SUGGESTIONS.map((s, i) => (
+                <button key={i} onClick={() => sendMessage(s.replace(/^.+?\s/, ''), true)}
+                  className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white/60 text-sm text-left hover:bg-emerald-500/10 hover:border-emerald-500/20 hover:text-emerald-400 transition-all">
                   {s}
                 </button>
               ))}
@@ -152,7 +168,7 @@ export default function ChatBot({ tripId, members = [] }) {
         )}
 
         {messages.map((msg, i) => (
-          <div key={msg.id || i} className={`flex ${msg.role === 'USER' ? 'justify-end' : 'justify-start'} animate-fadeIn`}>
+          <div key={msg.id || i} className={`flex ${msg.role === 'USER' ? 'justify-end' : 'justify-start'}`}>
             {msg.role === 'AI' && (
               <div className="w-8 h-8 shrink-0 bg-emerald-500/20 rounded-full flex items-center justify-center mr-2 mt-1">
                 <span className="text-sm">🤖</span>
@@ -207,9 +223,9 @@ export default function ChatBot({ tripId, members = [] }) {
 
       {messages.length > 0 && messages.length < 10 && !loading && (
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto scrollbar-hide">
-          {SUGGESTIONS.slice(messages.length % SUGGESTIONS.length, messages.length % SUGGESTIONS.length + 3).map((s, i) => (
-            <button key={i} onClick={() => sendMessage(s, true)}
-              className="shrink-0 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white/50 text-sm hover:text-white hover:border-emerald-500/30 hover:bg-emerald-500/10 transition-colors">
+          {AI_SUGGESTIONS.slice(messages.length % AI_SUGGESTIONS.length, messages.length % AI_SUGGESTIONS.length + 2).map((s, i) => (
+            <button key={i} onClick={() => sendMessage(s.replace(/^.+?\s/, ''), true)}
+              className="shrink-0 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white/50 text-sm hover:text-emerald-400 hover:border-emerald-500/30 transition-colors">
               {s}
             </button>
           ))}
@@ -217,20 +233,23 @@ export default function ChatBot({ tripId, members = [] }) {
       )}
 
       <div className="p-3 sm:p-4 border-t border-white/10">
-        <form onSubmit={(e) => { e.preventDefault(); sendMessage(); }} className="flex gap-2 sm:gap-3">
+        <form onSubmit={(e) => { e.preventDefault(); sendMessage(input, true); }} className="flex gap-2 sm:gap-3">
           <input ref={inputRef} type="text" value={input} onChange={e => setInput(e.target.value)}
-            placeholder="Type a message to the group..."
+            placeholder="Ask AI anything about your trip..."
             className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm sm:text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none transition-colors" />
           <button type="submit" disabled={loading || !input.trim()}
-            className="px-4 sm:px-5 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 rounded-xl font-medium transition-all text-sm sm:text-base">
-            Send
-          </button>
-          <button type="button" onClick={() => sendMessage(input, true)} disabled={loading || !input.trim()}
-            className="px-4 sm:px-5 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 rounded-xl font-medium transition-all text-sm sm:text-base flex items-center gap-1.5">
+            className="px-5 sm:px-6 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 rounded-xl font-medium transition-all text-sm sm:text-base flex items-center gap-1.5">
             <span className="hidden sm:inline">🤖</span> Ask AI
           </button>
+          <button type="button" onClick={() => sendMessage(input, false)} disabled={loading || !input.trim()}
+            className="px-4 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 rounded-xl font-medium transition-all text-sm sm:text-base"
+            title="Send as group message (no AI response)">
+            Send
+          </button>
         </form>
-        <p className="text-white/20 text-xs mt-2 text-center">"Send" for group chat only. "Ask AI" triggers AI response. Messages sync in real-time.</p>
+        <p className="text-white/20 text-xs mt-2 text-center">
+          <span className="text-emerald-400/40">Ask AI</span> = get AI travel advice · <span className="text-white/40">Send</span> = message your group
+        </p>
       </div>
     </div>
   );
