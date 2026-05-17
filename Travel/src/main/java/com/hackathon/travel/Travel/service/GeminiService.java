@@ -44,48 +44,20 @@ public class GeminiService {
     private static final String GROQ_URL =
         "https://api.groq.com/openai/v1/chat/completions";
 
-    private static final String GROQ_MODEL = "llama-3.3-70b-versatile";
+    private static final String GROQ_MODEL = "llama-3.1-8b-instant";
 
     private static final String SYSTEM_PROMPT = """
-        You are WanderTribe AI — an expert travel planner who has personally explored every corner of \
-        Himachal Pradesh, Kashmir, Ladakh, and the Indian Himalayas. You have deep local knowledge about:
+        You are WanderTribe AI — an expert travel planner for Himachal Pradesh, Kashmir, Ladakh, \
+        and the Indian Himalayas with deep local knowledge about hotels, restaurants, treks, \
+        transport, passes, and hidden gems.
         
-        - Specific hotels, their actual prices, and honest reviews
-        - Named restaurants and dhabas with signature dishes and costs in INR
-        - Exact trek routes with distances, difficulty, and gear needed
-        - Real transport options with current fare ranges
-        - Which passes are open in which months
-        - Altitude sickness risks and precautions
-        - Payment methods that work (cash vs UPI vs card) at each location
-        - Offbeat hidden gems that only locals know
-        - Festival dates and cultural events
-        - Safety information and emergency contacts
-        
-        PERSONALIZATION:
-        - In your FIRST response, briefly ask about the group: ages, fitness level, interests \
-          (adventure/chill/spiritual/photography), dietary preferences, and any mobility concerns.
-        - Use these preferences in ALL future suggestions to give a truly customized experience.
-        - Remember what the user tells you and reference it later.
-        
-        RESPONSE FORMAT RULES:
-        1. ALWAYS give specific names, prices in ₹, and distances — never be vague
-        2. When trip details are already provided, use them directly. Do NOT ask for info already given.
-        3. Format with clear markdown: headers (##), bullet points, **bold** for key info
-        4. Include a mix of popular AND offbeat suggestions
-        5. Mention best time of day to visit each place
-        6. Warn about altitude sickness if destination is above 8,000 ft
-        7. Suggest cheaper alternatives alongside premium options
-        8. Keep responses conversational and enthusiastic but informative
-        9. When creating itineraries, include realistic travel times between locations
-        
-        HOTEL RECOMMENDATIONS (ALWAYS put these at the END of your response):
-        10. ALWAYS end your response with a "### Recommended Stays" section
-        11. For each hotel include: name, price/night, distance from main attraction, \
-            view description (mountain view, valley view, riverside, etc.), vibe (cozy/luxury/rustic/backpacker), \
-            amenities, and payment method (cash/card/UPI)
-        12. Include both budget and premium options
-        13. Describe what the guest will SEE and FEEL — "wake up to snow-capped Dhauladhar peaks", \
-            "fall asleep to the sound of river Beas", "sit by the bonfire under a billion stars"
+        RULES:
+        1. Give specific names, prices in ₹, and distances — never be vague
+        2. When trip details are provided, use them. Do NOT ask for info already given.
+        3. Use markdown: headers (##), bullet points, **bold** for key info
+        4. Include popular AND offbeat suggestions
+        5. Keep responses concise but informative (under 500 words)
+        6. End with a "### Recommended Stays" section with budget + premium options
         """;
 
     public GeminiService(DestinationKnowledgeBase knowledgeBase) {
@@ -97,11 +69,12 @@ public class GeminiService {
         String contextPrompt = buildContextFromHistory(history);
         String destination = extractDestination(tripContext);
         String localKnowledge = knowledgeBase.getKnowledgeForDestination(destination);
+        if (localKnowledge.length() > 1000) localKnowledge = localKnowledge.substring(0, 1000);
 
         String fullPrompt = SYSTEM_PROMPT + "\n\n" + tripContext +
-                localKnowledge +
-                "\n\nConversation so far:\n" + contextPrompt
-                + "\n\nUser: " + userMessage + "\n\nAssistant:";
+                (localKnowledge.isEmpty() ? "" : "\nLocal info:\n" + localKnowledge) +
+                (contextPrompt.isEmpty() ? "" : "\n\nRecent chat:\n" + contextPrompt) +
+                "\n\nUser: " + userMessage + "\n\nAssistant:";
         return callAI(fullPrompt);
     }
 
@@ -235,7 +208,7 @@ public class GeminiService {
             requestBody.put("model", GROQ_MODEL);
             requestBody.put("messages", messages);
             requestBody.put("temperature", 0.7);
-            requestBody.put("max_tokens", 4096);
+            requestBody.put("max_tokens", 2048);
 
             Map<String, Object> response = restClient.post()
                     .uri(GROQ_URL)
@@ -256,8 +229,8 @@ public class GeminiService {
     }
 
     private String buildContextFromHistory(List<ChatMessage> history) {
-        if (history == null || history.isEmpty()) return "No previous conversation.";
-        int startIdx = Math.max(0, history.size() - 10);
+        if (history == null || history.isEmpty()) return "";
+        int startIdx = Math.max(0, history.size() - 5);
         return history.subList(startIdx, history.size()).stream()
                 .map(m -> m.getRole().name() + ": " + m.getContent())
                 .collect(Collectors.joining("\n"));
