@@ -29,7 +29,16 @@ public class TripController {
 
     @PostMapping
     public Trip createTrip(@RequestBody Trip trip) {
-        return tripRepository.save(trip);
+        Trip saved = tripRepository.save(trip);
+        if (trip.getCreatedBy() != null && !trip.getCreatedBy().isBlank()) {
+            userRepository.findByEmail(trip.getCreatedBy())
+                .or(() -> userRepository.findByName(trip.getCreatedBy()))
+                .ifPresent(user -> {
+                    saved.getMembers().add(user);
+                    tripRepository.save(saved);
+                });
+        }
+        return saved;
     }
 
     @GetMapping

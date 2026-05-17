@@ -169,16 +169,12 @@ public class GeminiService {
         return callAI(prompt);
     }
 
-    /**
-     * Tries Gemini first. If Gemini fails (quota, error, no key), falls back to Groq.
-     * If both fail, returns an error message.
-     */
     private String callAI(String prompt) {
-        String geminiResult = callGemini(prompt);
-        if (geminiResult != null) return geminiResult;
-
         String groqResult = callGroq(prompt);
         if (groqResult != null) return groqResult;
+
+        String geminiResult = callGemini(prompt);
+        if (geminiResult != null) return geminiResult;
 
         return "Both AI providers are currently unavailable. Please try again in a minute.\n\n" +
                "**Setup tips:**\n" +
@@ -222,7 +218,6 @@ public class GeminiService {
 
         try {
             List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
             messages.add(Map.of("role", "user", "content", prompt));
 
             Map<String, Object> requestBody = new LinkedHashMap<>();
@@ -243,7 +238,7 @@ public class GeminiService {
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
             return (String) message.get("content");
         } catch (Exception e) {
-            System.out.println("[WanderTribe] Groq failed: " + e.getMessage());
+            System.out.println("[WanderTribe] Groq failed: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             return null;
         }
     }
