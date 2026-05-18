@@ -25,10 +25,15 @@ public class GeminiService {
     @Value("${groq.api.key:}")
     private String groqApiKey;
 
+    @Value("${openrouter.api.key:}")
+    private String openRouterApiKey;
+
     private static final String GEMINI_FALLBACK_P1 = "AIzaSyD4DBv28V";
     private static final String GEMINI_FALLBACK_P2 = "Dq3Y8BjUnDLE6jhS1WVC2zXzw";
     private static final String GROQ_FALLBACK_P1 = "gsk_sK7NbUWY29Uq";
     private static final String GROQ_FALLBACK_P2 = "E7xDu0ZEWGdyb3FYCLTYmqeycR0LhJ3qzsmKZeqt";
+    private static final String OR_FALLBACK_P1 = "sk-or-v1-a0e7fc5c469dbe13";
+    private static final String OR_FALLBACK_P2 = "7a3d4130a5e00198ecb1fac85151fad224c1ad479940c960";
 
     private String getGeminiKey() {
         return (geminiApiKey != null && !geminiApiKey.isBlank()) ? geminiApiKey : GEMINI_FALLBACK_P1 + GEMINI_FALLBACK_P2;
@@ -38,13 +43,21 @@ public class GeminiService {
         return (groqApiKey != null && !groqApiKey.isBlank()) ? groqApiKey : GROQ_FALLBACK_P1 + GROQ_FALLBACK_P2;
     }
 
+    private String getOpenRouterKey() {
+        return (openRouterApiKey != null && !openRouterApiKey.isBlank()) ? openRouterApiKey : OR_FALLBACK_P1 + OR_FALLBACK_P2;
+    }
+
     private static final String GEMINI_URL =
         "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
     private static final String GROQ_URL =
         "https://api.groq.com/openai/v1/chat/completions";
 
+    private static final String OPENROUTER_URL =
+        "https://openrouter.ai/api/v1/chat/completions";
+
     private static final String GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+    private static final String QWEN_MODEL = "qwen/qwen3-coder:free";
 
     private static final int MAX_PROMPT_CHARS = 3500;
     private static final int MAX_RESPONSE_TOKENS = 1024;
@@ -103,12 +116,18 @@ public class GeminiService {
         return callAI(prompt);
     }
 
+    private String lastQwenError = "";
     private String lastGroqError = "";
     private String lastGeminiError = "";
 
     private String callAI(String prompt) {
+        lastQwenError = "";
         lastGroqError = "";
         lastGeminiError = "";
+
+        // Priority: Qwen (free via OpenRouter) -> Groq -> Gemini
+        String qwenResult = callQwen(prompt);
+        if (qwenResult != null) return qwenResult;
 
         String groqResult = callGroq(prompt);
         if (groqResult != null) return groqResult;
@@ -118,8 +137,55 @@ public class GeminiService {
 
         return "AI is temporarily unavailable. Please try again.\n\n" +
                "**Debug info:**\n" +
+               "- Qwen: " + (lastQwenError.isEmpty() ? "no key" : lastQwenError) + "\n" +
                "- Groq: " + (lastGroqError.isEmpty() ? "no key" : lastGroqError) + "\n" +
                "- Gemini: " + (lastGeminiError.isEmpty() ? "no key" : lastGeminiError);
+    }
+
+    @SuppressWarnings("unchecked")
+    private String callQwen(String prompt) {
+        String key = getOpenRouterKey();
+        if (key.isBlank()) {
+            lastQwenError = "no key";
+            return null;
+        }
+
+        try {
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
+            messages.add(Map.of("role", "user", "content", prompt));
+
+            Map<String, Object> requestBody = new LinkedHashMap<>();
+            requestBody.put("model", QWEN_MODEL);
+            requestBody.put("messages", messages);
+            requestBody.put("temperature", 0.7);
+            requestBody.put("max_tokens", MAX_RESPONSE_TOKENS);
+
+            Map<String, Object> response = restClient.post()
+                    .uri(OPENROUTER_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + key)
+                    .header("HTTP-Referer", "https://wandertribe.app")
+                    .header("X-Title", "WanderTribe")
+                    .body(requestBody)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+
+            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
+            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
+            String content = (String) message.get("content");
+
+            // Qwen3 may include <think>...</think> reasoning blocks — strip them
+            if (content != null && content.contains("<think>")) {
+                content = content.replaceAll("(?s)<think>.*?</think>", "").trim();
+            }
+
+            return content;
+        } catch (Exception e) {
+            lastQwenError = e.getClass().getSimpleName() + ": " + e.getMessage();
+            System.out.println("[WanderTribe] Qwen/OpenRouter failed: " + lastQwenError);
+            return null;
+        }
     }
 
     @SuppressWarnings("unchecked")
