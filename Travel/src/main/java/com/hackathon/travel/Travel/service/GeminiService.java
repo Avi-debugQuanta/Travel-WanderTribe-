@@ -30,8 +30,8 @@ public class GeminiService {
 
     private static final String GEMINI_FALLBACK_P1 = "AIzaSyD4DBv28V";
     private static final String GEMINI_FALLBACK_P2 = "Dq3Y8BjUnDLE6jhS1WVC2zXzw";
-    private static final String GROQ_FALLBACK_P1 = "gsk_sK7NbUWY29Uq";
-    private static final String GROQ_FALLBACK_P2 = "E7xDu0ZEWGdyb3FYCLTYmqeycR0LhJ3qzsmKZeqt";
+    private static final String GROQ_FALLBACK_P1 = "gsk_G0jFqT0rx4lyIF2Rl2GH";
+    private static final String GROQ_FALLBACK_P2 = "WGdyb3FYg8vSS7OF1pls2koxwpPg8Epb";
     private static final String OR_FALLBACK_P1 = "sk-or-v1-a0e7fc5c469dbe13";
     private static final String OR_FALLBACK_P2 = "7a3d4130a5e00198ecb1fac85151fad224c1ad479940c960";
 
