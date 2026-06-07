@@ -148,6 +148,45 @@ function RoadmapVisual({ days, activeDay, onSelectDay }) {
 
 function DayCard({ day, isActive }) {
   const [expanded, setExpanded] = useState(true);
+  const [showHotelTip, setShowHotelTip] = useState(false);
+
+  const hotelInfo = useMemo(() => {
+    const content = day.content || '';
+    const lines = content.split('\n');
+    const info = { name: '', rating: '', reviews: '', price: '', location: '', why: '', watchOut: '', bookingTip: '' };
+
+    let inStaySection = false;
+    for (const line of lines) {
+      if (line.match(/\*\*🏨\s*Stay/i) || line.match(/\*\*Stay/i)) {
+        inStaySection = true;
+        const nameMatch = line.match(/\*\*[^*]*\*\*\s*\[?([^\]—\n]+)/);
+        if (nameMatch) info.name = nameMatch[1].replace(/[[\]]/g, '').trim();
+        const ratingMatch = line.match(/([\d.]+)\s*\/\s*5/);
+        if (ratingMatch) info.rating = ratingMatch[1];
+        const reviewsMatch = line.match(/\((\d+[^\)]*)\s*(?:Google\s*)?Reviews?\)/i);
+        if (reviewsMatch) info.reviews = reviewsMatch[1];
+        continue;
+      }
+      if (inStaySection) {
+        if (line.match(/^\*\*[^S]/i) && !line.match(/Price|Location|Why|Watch|Book/i)) {
+          inStaySection = false;
+          continue;
+        }
+        const priceMatch = line.match(/Price[:\s]*₹([\d,]+)/i);
+        if (priceMatch) info.price = priceMatch[1];
+        const locMatch = line.match(/Location[:\s]*(.*)/i);
+        if (locMatch) info.location = locMatch[1].replace(/[*📍]/g, '').trim();
+        const whyMatch = line.match(/(?:Why|recommend)[:\s]*"?([^""\n]+)"?/i);
+        if (whyMatch) info.why = whyMatch[1].trim();
+        const watchMatch = line.match(/(?:Watch out|Con)[:\s]*(.*)/i);
+        if (watchMatch) info.watchOut = watchMatch[1].replace(/[*❌]/g, '').trim();
+        const bookMatch = line.match(/(?:Booking tip|Book via)[:\s]*(.*)/i);
+        if (bookMatch) info.bookingTip = bookMatch[1].replace(/[*🔗]/g, '').trim();
+      }
+    }
+    if (!info.name && day.stay) info.name = day.stay;
+    return info;
+  }, [day]);
 
   return (
     <div className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
@@ -189,13 +228,80 @@ function DayCard({ day, isActive }) {
         </div>
       </div>
 
+      {hotelInfo.name && (
+        <div className="mx-5 mt-4 relative">
+          <div
+            className="p-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-xl cursor-pointer hover:border-violet-500/40 transition-all group"
+            onMouseEnter={() => setShowHotelTip(true)}
+            onMouseLeave={() => setShowHotelTip(false)}
+            onClick={() => setShowHotelTip(!showHotelTip)}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                  <span className="text-lg">🏨</span>
+                </div>
+                <div>
+                  <p className="text-violet-200 font-semibold text-sm">{hotelInfo.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {hotelInfo.rating && (
+                      <span className="text-amber-400 text-xs font-medium">⭐ {hotelInfo.rating}/5</span>
+                    )}
+                    {hotelInfo.reviews && (
+                      <span className="text-white/40 text-[10px]">({hotelInfo.reviews} reviews)</span>
+                    )}
+                    {hotelInfo.price && (
+                      <span className="text-emerald-400 text-xs">₹{hotelInfo.price}/night</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="text-white/30 group-hover:text-violet-400 transition-colors">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+
+            {showHotelTip && (hotelInfo.why || hotelInfo.watchOut || hotelInfo.bookingTip || hotelInfo.location) && (
+              <div className="mt-3 pt-3 border-t border-violet-500/20 space-y-2 animate-fadeIn">
+                {hotelInfo.location && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs">📍</span>
+                    <p className="text-white/60 text-xs">{hotelInfo.location}</p>
+                  </div>
+                )}
+                {hotelInfo.why && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs">✅</span>
+                    <p className="text-emerald-300/80 text-xs italic">"{hotelInfo.why}"</p>
+                  </div>
+                )}
+                {hotelInfo.watchOut && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs">⚠️</span>
+                    <p className="text-amber-300/80 text-xs">{hotelInfo.watchOut}</p>
+                  </div>
+                )}
+                {hotelInfo.bookingTip && (
+                  <div className="flex items-start gap-2">
+                    <span className="text-xs">💡</span>
+                    <p className="text-cyan-300/80 text-xs">{hotelInfo.bookingTip}</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="p-5 sm:p-6">
         <button onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 text-sm text-white/50 hover:text-white/80 mb-4 transition-colors">
           <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          {expanded ? 'Hide details' : 'Show full details'}
+          {expanded ? 'Hide details' : 'Show full day details'}
         </button>
 
         {expanded && (
@@ -204,19 +310,12 @@ function DayCard({ day, isActive }) {
               prose-h3:text-emerald-400 prose-h3:text-sm prose-h3:font-bold prose-h3:mb-2 prose-h3:mt-4
               prose-strong:text-cyan-300
               prose-li:text-white/70 prose-li:text-sm
-              prose-p:text-white/70 prose-p:text-sm">
+              prose-p:text-white/70 prose-p:text-sm
+              prose-table:text-xs prose-th:text-emerald-400 prose-th:bg-emerald-500/10 prose-th:px-3 prose-th:py-1.5
+              prose-td:px-3 prose-td:py-1.5 prose-td:border-white/5 prose-td:text-white/70
+              prose-em:text-violet-300/80">
               <ReactMarkdown>{day.content}</ReactMarkdown>
             </div>
-
-            {day.stay && (
-              <div className="flex items-start gap-3 p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl">
-                <span className="text-lg">🏨</span>
-                <div>
-                  <p className="text-violet-300 text-sm font-medium">Stay</p>
-                  <p className="text-white/70 text-sm">{day.stay}</p>
-                </div>
-              </div>
-            )}
 
             {day.proTip && (
               <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
