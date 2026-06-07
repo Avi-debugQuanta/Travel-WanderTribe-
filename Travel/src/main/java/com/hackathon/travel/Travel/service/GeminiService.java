@@ -60,7 +60,7 @@ public class GeminiService {
     private static final String QWEN_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
     private static final int MAX_PROMPT_CHARS = 4000;
-    private static final int MAX_RESPONSE_TOKENS = 2000;
+    private static final int MAX_RESPONSE_TOKENS = 1200;
 
     private static final String SYSTEM_PROMPT =
         "You are WanderTribe AI — the world's most detailed Indian road-trip planner. " +
