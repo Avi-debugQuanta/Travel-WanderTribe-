@@ -59,15 +59,15 @@ public class GeminiService {
     private static final String GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
     private static final String QWEN_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
-    private static final int MAX_PROMPT_CHARS = 4500;
-    private static final int MAX_RESPONSE_TOKENS = 2048;
+    private static final int MAX_PROMPT_CHARS = 5000;
+    private static final int MAX_RESPONSE_TOKENS = 3500;
 
     private static final String SYSTEM_PROMPT =
-        "You are WanderTribe AI, an expert Indian travel planner with deep knowledge of Google Reviews, " +
-        "TripAdvisor ratings, and real traveler experiences. " +
-        "Always provide: real hotel/restaurant names, Google rating (e.g. 4.3★), review count, " +
-        "price in ₹, why travelers love it (quote a review style comment). " +
-        "Use markdown formatting. Be detailed and specific with real-world data.";
+        "You are WanderTribe AI — the world's most detailed Indian road-trip planner. " +
+        "You know every highway, every famous dhaba (roadside eatery), every scenic viewpoint, " +
+        "every Google-reviewed hotel, and every km marker on Indian routes. " +
+        "Always include: real place names, Google ratings (X.X★, N reviews), prices in ₹, " +
+        "distances in km, drive times, and traveler quotes. Format in rich markdown.";
 
     public GeminiService(DestinationKnowledgeBase knowledgeBase) {
         this.restClient = RestClient.create();
@@ -97,46 +97,63 @@ public class GeminiService {
                                    String budget, String travelStyle, List<Idea> ideas,
                                    String chatSummary) {
         String ideasText = ideas.stream()
-                .limit(5)
-                .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " votes)")
+                .limit(8)
+                .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " upvotes)")
                 .collect(Collectors.joining("\n"));
 
-        String prompt = SYSTEM_PROMPT + "\n\nCreate a HIGHLY DETAILED ROADMAP itinerary (like a premium travel guide):\n" +
-                "Destination: " + destination + " | Dates: " + startDate + " to " + endDate +
-                " | Budget: ₹" + budget + "/person | Style: " + travelStyle + "\n" +
-                (ideasText.isEmpty() ? "" : "Group Ideas:\n" + ideasText + "\n") +
-                (chatSummary != null && chatSummary.length() > 10 ? "Context: " + truncate(chatSummary, 300) + "\n" : "") +
-                "\nFORMAT EACH DAY EXACTLY AS:\n" +
-                "## Day X: [Catchy Title]\n" +
-                "**Route:** [City A → City B] (XX km, X.X hrs drive)\n" +
-                "**Road Conditions:** [NH/State Highway/Mountain road], Scenic Level: ⭐⭐⭐⭐ (4/5)\n" +
-                "**Best Time to Start:** X:XX AM\n\n" +
-                "### 🌅 Morning (6AM-12PM)\n" +
-                "- **[Place Name]** - Detailed description, timing (X AM-X PM), Entry: ₹XX\n" +
-                "  - *What makes it special:* One-line unique detail\n" +
-                "- **[Place 2]** - Description\n\n" +
-                "### ☀️ Afternoon (12PM-5PM)\n- Similar format\n\n" +
-                "### 🌙 Evening (5PM-10PM)\n- Similar format\n\n" +
-                "**🏨 Stay:** [Hotel Name] — ⭐ X.X/5 (XXX Google Reviews)\n" +
-                "- Price: ₹XXXX/night | Room type recommended\n" +
-                "- 📍 Location: XX km from [landmark]\n" +
-                "- ✅ Why we recommend: \"[Quote from a Google review style comment]\"\n" +
-                "- ❌ Watch out: [One honest con from reviews]\n" +
-                "- 🔗 Booking tip: [Book via X for best price]\n\n" +
-                "**🍽️ Food Spots:**\n" +
-                "| Meal | Restaurant | Dish to Try | Cost | Rating |\n" +
-                "|------|-----------|-------------|------|--------|\n" +
-                "| Breakfast | [Name] | [Dish] | ₹XX | ⭐X.X |\n" +
-                "| Lunch | [Name] | [Dish] | ₹XX | ⭐X.X |\n" +
-                "| Dinner | [Name] | [Dish] | ₹XX | ⭐X.X |\n\n" +
-                "**🚗 Transport:** [Mode] — ₹XXX | Book via [app/counter]\n" +
-                "**💰 Day Cost:** ₹XXXX (Stay: ₹XX + Food: ₹XX + Activities: ₹XX + Transport: ₹XX)\n" +
-                "**💡 Pro Tip:** [Insider knowledge that saves money/time]\n\n" +
-                "---\n\n" +
-                "END WITH:\n" +
-                "## 💰 Total Trip Cost Breakdown\n| Category | Cost |\n|---|---|\n[itemized table]\n\n" +
-                "## 🎒 Packing Checklist\n- [ ] Item (why needed)\n\n" +
-                "## 📞 Emergency Contacts\n| Service | Number |\n|---|---|\n[table]";
+        String prompt = SYSTEM_PROMPT + "\n\n" +
+                "Create the ULTIMATE road-trip itinerary (inspired by Lonely Planet + Google Maps + real traveler blogs).\n\n" +
+                "TRIP: " + destination + " | " + startDate + " → " + endDate +
+                " | ₹" + budget + "/person | Style: " + travelStyle + "\n" +
+                (ideasText.isEmpty() ? "" : "\n👥 GROUP VOTED IDEAS (must include!):\n" + ideasText + "\n") +
+                (chatSummary != null && chatSummary.length() > 10 ? "Group notes: " + truncate(chatSummary, 250) + "\n" : "") +
+                "\n=== FORMAT (follow EXACTLY) ===\n\n" +
+                "## Day X: [Exciting Title]\n" +
+                "**🗺️ Route:** Start City → Stop 1 → Stop 2 → Destination\n" +
+                "**📏 Total:** XX km | ⏱️ X.X hrs | 🛣️ NH-XX/State Road\n" +
+                "**⭐ Scenic Rating:** ★★★★☆ (4/5)\n\n" +
+                "### 🛣️ Route Breakdown (km markers)\n" +
+                "| Km | Stop | What to Do | Duration |\n" +
+                "|-----|------|------------|----------|\n" +
+                "| 0 | [Start] | Begin journey | - |\n" +
+                "| 45 | [Dhaba/Viewpoint] | [Food/Photo stop] | 20 min |\n" +
+                "| 90 | [Town/Attraction] | [Activity] | 1 hr |\n" +
+                "| 150 | [Destination] | Check-in | - |\n\n" +
+                "### 🌅 Morning (6:00 AM – 12:00 PM)\n" +
+                "**6:00 AM** — Wake up, [activity]\n" +
+                "**7:30 AM** — Breakfast at [Name] (⭐X.X, ₹XXX) — Try: [dish]\n" +
+                "**9:00 AM** — [Activity/Place] — [description], Entry: ₹XX\n" +
+                "  > 💬 *\"[Review quote from travelers]\"*\n\n" +
+                "### ☀️ Afternoon (12:00 PM – 5:00 PM)\n" +
+                "**12:30 PM** — Lunch at [Dhaba/Restaurant Name] (⭐X.X, ₹XXX)\n" +
+                "  > 📍 [Location detail] | Must-try: [dish name]\n" +
+                "**2:00 PM** — [Activity] — [details]\n\n" +
+                "### 🌙 Evening (5:00 PM – 10:00 PM)\n" +
+                "**5:30 PM** — [Activity]\n" +
+                "**7:30 PM** — Dinner at [Name] (⭐X.X, ₹XXX)\n" +
+                "**9:00 PM** — Back to hotel, rest\n\n" +
+                "### 🏨 Tonight's Stay\n" +
+                "**[Hotel Name]** — ⭐ X.X/5 (XXX Google Reviews)\n" +
+                "- 💰 ₹XXXX/night (Deluxe/Standard)\n" +
+                "- 📍 X km from [landmark/bus stand]\n" +
+                "- ✅ Loved: \"[Actual review-style quote]\"\n" +
+                "- ⚠️ Note: [honest observation]\n" +
+                "- 🔗 Book on: MakeMyTrip/Goibibo for best deals\n\n" +
+                "### 🍽️ All Meals\n" +
+                "| Time | Place | Famous For | Cost | ⭐ |\n" +
+                "|------|-------|-----------|------|----|\n\n" +
+                "### 💰 Day X Budget\n" +
+                "| Item | Cost |\n|------|------|\n" +
+                "| Stay | ₹XXXX |\n| Food | ₹XXXX |\n| Activities | ₹XXX |\n| Transport | ₹XXX |\n" +
+                "| **Total** | **₹XXXX** |\n\n" +
+                "### 💡 Insider Tips\n" +
+                "1. [Money-saving tip]\n2. [Safety tip]\n3. [Local secret]\n\n---\n\n" +
+                "AFTER ALL DAYS:\n\n" +
+                "## 💰 Complete Trip Budget\n" +
+                "| Category | Per Person | For Group |\n|---|---|---|\n[full breakdown]\n\n" +
+                "## 🎒 Packing List\n- [ ] [Item] — [why essential for this trip]\n\n" +
+                "## 📞 Emergency & Useful Numbers\n| Service | Number | Notes |\n|---|---|---|\n\n" +
+                "## 📱 Apps You'll Need\n- [App] — [what for]\n";
 
         return callAI(truncate(prompt, MAX_PROMPT_CHARS));
     }
