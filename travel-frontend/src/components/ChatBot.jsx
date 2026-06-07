@@ -179,15 +179,29 @@ export default function ChatBot({ tripId, members = [] }) {
                 <p className="text-sm text-white/30 text-right mb-1 mr-1">{msg.userName}</p>
               )}
               {msg.role === 'AI' && (
-                <p className="text-sm text-emerald-400/60 mb-1 ml-1">WanderTribe AI</p>
+                <p className="text-sm text-emerald-400/60 mb-1 ml-1 font-medium">✨ WanderTribe AI</p>
               )}
               <div className={`px-4 py-3 rounded-2xl ${
                 msg.role === 'USER'
                   ? 'bg-emerald-500 text-white rounded-br-md'
-                  : 'bg-white/10 text-white/90 rounded-bl-md'
+                  : 'bg-gradient-to-br from-slate-800/90 to-slate-800/70 border border-white/10 text-white/90 rounded-bl-md shadow-lg'
               }`}>
                 {msg.role === 'AI' ? (
-                  <div className="prose prose-invert prose-base max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0">
+                  <div className="prose prose-invert prose-sm sm:prose-base max-w-none
+                    [&>*:first-child]:mt-0 [&>*:last-child]:mb-0
+                    prose-h2:text-emerald-400 prose-h2:text-lg prose-h2:font-bold prose-h2:mt-5 prose-h2:mb-3 prose-h2:border-b prose-h2:border-white/10 prose-h2:pb-2
+                    prose-h3:text-cyan-300 prose-h3:text-base prose-h3:font-semibold prose-h3:mt-4 prose-h3:mb-2
+                    prose-strong:text-emerald-300
+                    prose-em:text-violet-300 prose-em:not-italic
+                    prose-li:text-white/80 prose-li:leading-relaxed
+                    prose-p:text-white/80 prose-p:leading-relaxed
+                    prose-a:text-cyan-400 prose-a:no-underline hover:prose-a:underline
+                    prose-table:text-xs prose-table:bg-white/5 prose-table:rounded-xl prose-table:overflow-hidden
+                    prose-th:text-emerald-400 prose-th:bg-emerald-500/10 prose-th:px-3 prose-th:py-2 prose-th:text-left prose-th:font-semibold
+                    prose-td:px-3 prose-td:py-2 prose-td:border-white/5 prose-td:text-white/70
+                    prose-blockquote:border-l-emerald-500 prose-blockquote:bg-emerald-500/5 prose-blockquote:rounded-r-xl prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:text-emerald-200/80 prose-blockquote:text-sm prose-blockquote:italic
+                    prose-code:text-cyan-300 prose-code:bg-cyan-500/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
+                    prose-hr:border-white/10">
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 ) : (

@@ -172,7 +172,7 @@ function DayCard({ day, isActive, theme, ideas }) {
   const [expanded, setExpanded] = useState(isActive);
 
   return (
-    <div className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
+    <div className={`rounded-2xl border overflow-hidden transition-all duration-300 interactive-card ${
       isActive ? `${theme.border} shadow-xl shadow-emerald-500/5 bg-slate-800/90` : 'border-white/10 bg-white/5 hover:bg-white/[0.07]'
     }`}>
       <div className="relative h-40 sm:h-48 overflow-hidden">
@@ -251,7 +251,67 @@ function DayCard({ day, isActive, theme, ideas }) {
               prose-td:px-3 prose-td:py-2 prose-td:border-white/5 prose-td:text-white/70
               prose-em:text-violet-300/80 prose-em:not-italic
               prose-blockquote:border-l-emerald-500/40 prose-blockquote:bg-emerald-500/5 prose-blockquote:rounded-r-lg prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:text-emerald-200/70 prose-blockquote:text-xs prose-blockquote:italic">
-              <ReactMarkdown>{day.content}</ReactMarkdown>
+              <ReactMarkdown
+                components={{
+                  td: ({ children, ...props }) => {
+                    const text = String(children || '');
+                    const phoneMatch = text.match(/(\+91[-\s]?\d{5}[-\s]?\d{5}|\d{10,})/);
+                    if (phoneMatch) {
+                      const phone = phoneMatch[1].replace(/[-\s]/g, '');
+                      return (
+                        <td {...props}>
+                          <a href={`tel:${phone}`} className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 hover:bg-emerald-500/20 transition-all no-underline text-[11px] font-medium">
+                            📞 Call to Reserve
+                          </a>
+                        </td>
+                      );
+                    }
+                    return <td {...props}>{children}</td>;
+                  },
+                  a: ({ href, children, ...props }) => (
+                    <a href={href} target="_blank" rel="noopener" className="text-cyan-400 hover:text-cyan-300 no-underline border-b border-cyan-400/30 hover:border-cyan-400" {...props}>{children}</a>
+                  ),
+                  li: ({ children, ...props }) => {
+                    const text = String(children || '');
+                    if (text.match(/book|makemytrip|goibibo/i)) {
+                      const hotelName = day.content.match(/\*\*([^*]+)\*\*.*?⭐/)?.[1] || '';
+                      return (
+                        <li {...props}>
+                          {children}
+                          <div className="flex gap-2 mt-2">
+                            <a href={`https://www.makemytrip.com/hotels/hotel-listing/?city=${encodeURIComponent(hotelName)}`}
+                              target="_blank" rel="noopener"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 text-[11px] font-medium hover:bg-blue-500/20 transition-all no-underline">
+                              🔗 Book on MakeMyTrip
+                            </a>
+                            <a href={`https://www.goibibo.com/hotels/`}
+                              target="_blank" rel="noopener"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400 text-[11px] font-medium hover:bg-orange-500/20 transition-all no-underline">
+                              🔗 Book on Goibibo
+                            </a>
+                          </div>
+                        </li>
+                      );
+                    }
+                    if (text.match(/📞|call|contact|phone/i)) {
+                      const phoneMatch = text.match(/(\+91[-\s]?\d{5}[-\s]?\d{5}|\d{10,})/);
+                      if (phoneMatch) {
+                        const phone = phoneMatch[1].replace(/[-\s]/g, '');
+                        return (
+                          <li {...props}>
+                            {children}
+                            <a href={`tel:${phone}`}
+                              className="inline-flex items-center gap-1.5 ml-2 px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-[11px] font-medium hover:bg-emerald-500/20 transition-all no-underline">
+                              📞 Tap to Call
+                            </a>
+                          </li>
+                        );
+                      }
+                    }
+                    return <li {...props}>{children}</li>;
+                  }
+                }}
+              >{day.content}</ReactMarkdown>
             </div>
           </div>
         )}

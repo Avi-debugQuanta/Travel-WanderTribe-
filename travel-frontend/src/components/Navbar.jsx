@@ -61,9 +61,9 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-slate-900/95 backdrop-blur-xl shadow-lg shadow-black/10' : 'bg-slate-900/80 backdrop-blur-xl'
-      } border-b border-white/10`}>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${
+        scrolled ? 'bg-black/30 backdrop-blur-2xl shadow-xl shadow-black/20 border-b border-white/5' : 'bg-transparent backdrop-blur-sm'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
             <span className="text-2xl sm:text-3xl">🏔️</span>

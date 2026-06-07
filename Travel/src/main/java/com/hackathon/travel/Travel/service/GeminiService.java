@@ -64,10 +64,13 @@ public class GeminiService {
 
     private static final String SYSTEM_PROMPT =
         "You are WanderTribe AI — the world's most detailed Indian road-trip planner. " +
-        "You know every highway, every famous dhaba (roadside eatery), every scenic viewpoint, " +
-        "every Google-reviewed hotel, and every km marker on Indian routes. " +
-        "Always include: real place names, Google ratings (X.X★, N reviews), prices in ₹, " +
-        "distances in km, drive times, and traveler quotes. Format in rich markdown.";
+        "You know every highway, dhaba, scenic viewpoint, Google-reviewed hotel, km marker, " +
+        "local guide, and hidden gem on Indian routes. " +
+        "ALWAYS include: real place names, Google ratings (X.X★, N reviews), prices in ₹, " +
+        "distances in km, drive times, risk/adventure levels (🟢Safe 🟡Moderate 🔴Risky), " +
+        "restaurant phone numbers for reservation (format: 📞+91-XXXXX-XXXXX), " +
+        "hotel booking links (MakeMyTrip/Goibibo), and local guide recommendations. " +
+        "Format in rich markdown with emojis for visual appeal.";
 
     public GeminiService(DestinationKnowledgeBase knowledgeBase) {
         this.restClient = RestClient.create();
@@ -138,10 +141,22 @@ public class GeminiService {
                 "- 📍 X km from [landmark/bus stand]\n" +
                 "- ✅ Loved: \"[Actual review-style quote]\"\n" +
                 "- ⚠️ Note: [honest observation]\n" +
-                "- 🔗 Book on: MakeMyTrip/Goibibo for best deals\n\n" +
-                "### 🍽️ All Meals\n" +
-                "| Time | Place | Famous For | Cost | ⭐ |\n" +
-                "|------|-------|-----------|------|----|\n\n" +
+                "- 🔗 Book: makemytrip.com or goibibo.com | Call: 📞+91-XXXXX-XXXXX\n\n" +
+                "### 🍽️ Restaurants & Dhabas\n" +
+                "| Meal | Place | Must-Try Dish | Cost | ⭐ | 📞 Reservation |\n" +
+                "|------|-------|---------------|------|----|-----------------|\n" +
+                "| Breakfast | [Name] | [Dish] | ₹XX | X.X | +91-XXXXX-XXXXX |\n" +
+                "| Lunch | [Dhaba Name] | [Dish] | ₹XX | X.X | +91-XXXXX-XXXXX |\n" +
+                "| Dinner | [Name] | [Dish] | ₹XX | X.X | +91-XXXXX-XXXXX |\n\n" +
+                "### ⚠️ Risk & Safety\n" +
+                "| Activity | Risk Level | Why | Safety Tip |\n" +
+                "|----------|-----------|-----|------------|\n" +
+                "| [Activity] | 🟢 Safe / 🟡 Moderate / 🔴 Risky | [reason] | [precaution] |\n\n" +
+                "### 🧑‍🏫 Local Guide (if needed)\n" +
+                "- **Name:** [Guide Name] | ⭐ X.X rated\n" +
+                "- **Expertise:** [trekking/cultural/adventure]\n" +
+                "- **Contact:** 📞+91-XXXXX-XXXXX\n" +
+                "- **Cost:** ₹XXX/day | Book via: [how]\n\n" +
                 "### 💰 Day X Budget\n" +
                 "| Item | Cost |\n|------|------|\n" +
                 "| Stay | ₹XXXX |\n| Food | ₹XXXX |\n| Activities | ₹XXX |\n| Transport | ₹XXX |\n" +
@@ -159,9 +174,16 @@ public class GeminiService {
     }
 
     public String getSeasonRecommendation(String destination) {
-        String prompt = SYSTEM_PROMPT + "\n\nMonth-by-month guide for " + destination +
-                ": temp, weather, road conditions, crowd, festivals, best activities. " +
-                "End with TOP RECOMMENDATION for best month. Use markdown.";
+        String prompt = SYSTEM_PROMPT + "\n\nCreate a DETAILED month-by-month travel guide for " + destination + ":\n" +
+                "For EACH month include:\n" +
+                "- Temperature range & weather\n" +
+                "- Road conditions (🟢Open 🟡Risky 🔴Closed)\n" +
+                "- Crowd level (1-5)\n" +
+                "- Festivals/Events happening\n" +
+                "- Best activities for that month\n" +
+                "- Risk level for travel\n\n" +
+                "End with:\n## 🏆 TOP RECOMMENDATION\n[Best month with reasons]\n\n" +
+                "## ❌ AVOID\n[Worst months with reasons]\n\nUse tables and rich markdown.";
         return callAI(prompt);
     }
 
