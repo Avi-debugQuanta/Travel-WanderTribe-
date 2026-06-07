@@ -76,24 +76,24 @@ export default function Dashboard() {
   return (
     <div className="pt-24 sm:pt-28 px-4 sm:px-6 max-w-7xl mx-auto pb-20">
       {/* Welcome Hero */}
-      <div className="mb-10 p-6 sm:p-8 bg-gradient-to-r from-sky-500/10 via-violet-500/5 to-fuchsia-500/10 border border-sky-500/20 rounded-3xl">
+      <div className="mb-10 p-6 sm:p-8 bg-gradient-to-r from-emerald-500/10 via-cyan-500/5 to-violet-500/10 border border-emerald-500/20 rounded-3xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <p className="text-white/50 text-base sm:text-lg">{getGreeting()},</p>
             <h1 className="text-3xl sm:text-5xl font-bold mt-1">
-              <span className="bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">{user?.name || 'Explorer'}</span>
+              <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">{user?.name || 'Explorer'}</span>
             </h1>
             <p className="text-white/40 text-base mt-2">Ready for your next mountain adventure?</p>
           </div>
           <div className="flex items-center gap-3">
             {wallet && (
               <div className="px-5 py-3 bg-white/5 border border-white/10 rounded-2xl text-center">
-                <p className="text-sky-400 text-2xl font-bold">₹{wallet.balance?.toLocaleString()}</p>
+                <p className="text-emerald-400 text-2xl font-bold">₹{wallet.balance?.toLocaleString()}</p>
                 <p className="text-white/40 text-sm">Wallet</p>
               </div>
             )}
             <button onClick={() => setWizardOpen(true)}
-              className="px-6 py-4 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 rounded-2xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-sky-500/20">
+              className="px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-2xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
               + New Trip
             </button>
           </div>
@@ -123,9 +123,9 @@ export default function Dashboard() {
           <div className="grid sm:grid-cols-2 gap-4">
             <input type="text" placeholder="Destination (e.g., Manali, Kashmir, Spiti)" required value={form.destination}
               onChange={e => setForm({ ...form, destination: e.target.value })}
-              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-sky-500 focus:outline-none transition-colors" />
+              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none transition-colors" />
             <select value={form.travelStyle} onChange={e => setForm({ ...form, travelStyle: e.target.value })}
-              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-sky-500 focus:outline-none transition-colors">
+              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-emerald-500 focus:outline-none transition-colors">
               <option value="">Travel Style</option>
               <option value="luxury">Luxury</option>
               <option value="backpacker">Backpacker</option>
@@ -135,17 +135,17 @@ export default function Dashboard() {
               <option value="offroad">Offroad & Camping</option>
             </select>
             <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })}
-              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-sky-500 focus:outline-none transition-colors" />
+              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-emerald-500 focus:outline-none transition-colors" />
             <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })}
-              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-sky-500 focus:outline-none transition-colors" />
+              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-emerald-500 focus:outline-none transition-colors" />
             <input type="text" placeholder="Budget in INR (e.g., 20000)" value={form.budget}
               onChange={e => setForm({ ...form, budget: e.target.value })}
-              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-sky-500 focus:outline-none transition-colors" />
+              className="px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none transition-colors" />
           </div>
           <textarea placeholder="Describe your dream trip... (e.g., Want to see snowfall, try local food, visit temples)" value={form.description}
             onChange={e => setForm({ ...form, description: e.target.value })} rows={3}
-            className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-sky-500 focus:outline-none resize-none transition-colors" />
-          <button type="submit" className="px-8 py-4 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 rounded-xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-sky-500/20">
+            className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none resize-none transition-colors" />
+          <button type="submit" className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl font-semibold text-base transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
             Create Trip
           </button>
         </form>
@@ -160,20 +160,20 @@ export default function Dashboard() {
             <p className="text-2xl font-semibold mb-2">No trips yet</p>
             <p className="text-lg">Create your first mountain adventure!</p>
             <button onClick={() => setWizardOpen(true)}
-              className="mt-6 px-6 py-4 bg-sky-500/20 text-sky-400 border border-sky-500/30 rounded-xl hover:bg-sky-500/30 transition-colors text-base font-medium">
+              className="mt-6 px-6 py-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl hover:bg-emerald-500/30 transition-colors text-base font-medium">
               + Plan Your First Trip
             </button>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {trips.map(trip => (
-              <div key={trip.id} className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-sky-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/5">
+              <div key={trip.id} className="group bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/5">
                 <div className="h-44 relative overflow-hidden">
                   {getTripImage(trip.destination) ? (
                     <img src={getTripImage(trip.destination)} alt={trip.destination} loading="lazy"
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-sky-600/30 to-violet-600/30 flex items-center justify-center">
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-600/30 to-cyan-600/30 flex items-center justify-center">
                       <span className="text-5xl">🏔️</span>
                     </div>
                   )}
@@ -187,12 +187,12 @@ export default function Dashboard() {
                   {trip.startDate && <p className="text-white/50 text-base mb-3">📅 {trip.startDate} — {trip.endDate}</p>}
                   <div className="flex items-center gap-2 mb-4 flex-wrap">
                     {trip.travelStyle && (
-                      <span className="px-3 py-1.5 bg-sky-500/20 text-sky-400 text-sm rounded-full font-medium">
+                      <span className="px-3 py-1.5 bg-emerald-500/20 text-emerald-400 text-sm rounded-full font-medium">
                         {trip.travelStyle}
                       </span>
                     )}
                     {trip.budget && (
-                      <span className="px-3 py-1.5 bg-violet-500/20 text-violet-400 text-sm rounded-full font-medium">
+                      <span className="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 text-sm rounded-full font-medium">
                         ₹{Number(trip.budget).toLocaleString()}
                       </span>
                     )}
@@ -202,7 +202,7 @@ export default function Dashboard() {
                   )}
                   <div className="flex gap-2">
                     <Link to={`/trip/${trip.id}`}
-                      className="flex-1 text-center py-3 bg-sky-500 hover:bg-sky-400 rounded-xl text-base font-medium transition-all hover:scale-105">
+                      className="flex-1 text-center py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl text-base font-medium transition-all hover:scale-105">
                       Open Trip
                     </Link>
                     <button onClick={() => deleteTrip(trip.id)}
@@ -225,11 +225,11 @@ export default function Dashboard() {
           {SUGGESTED.map((dest, i) => (
             <button key={i} onClick={() => { setWizardOpen(true); }}
               className="shrink-0 w-44 sm:w-52 group">
-              <div className="h-32 sm:h-36 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:border-sky-500/30 transition-all">
+              <div className="h-32 sm:h-36 rounded-2xl overflow-hidden mb-3 border border-white/10 group-hover:border-emerald-500/30 transition-all">
                 <img src={dest.img} alt={dest.name} loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               </div>
-              <h4 className="font-semibold text-base group-hover:text-sky-400 transition-colors">{dest.name}</h4>
+              <h4 className="font-semibold text-base group-hover:text-emerald-400 transition-colors">{dest.name}</h4>
               <p className="text-white/40 text-sm">{dest.tag}</p>
             </button>
           ))}

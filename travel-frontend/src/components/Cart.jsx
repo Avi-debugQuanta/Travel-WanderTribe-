@@ -78,9 +78,9 @@ export default function Cart({ tripId, open, onClose, onCheckout }) {
         </div>
 
         {wallet && (
-          <div className="mx-6 mt-4 p-3 bg-gradient-to-r from-sky-500/10 to-violet-500/10 border border-sky-500/20 rounded-xl flex items-center justify-between">
+          <div className="mx-6 mt-4 p-3 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-between">
             <span className="text-white/60 text-sm">Wallet Balance</span>
-            <span className="text-sky-400 font-bold">₹{wallet.balance.toLocaleString()}</span>
+            <span className="text-emerald-400 font-bold">₹{wallet.balance.toLocaleString()}</span>
           </div>
         )}
 
@@ -110,13 +110,13 @@ export default function Cart({ tripId, open, onClose, onCheckout }) {
                   {item.negotiated && item.negotiatedPrice < item.originalPrice ? (
                     <>
                       <span className="text-white/30 line-through text-sm">₹{item.originalPrice.toLocaleString()}</span>
-                      <span className="text-sky-400 font-bold">₹{item.negotiatedPrice.toLocaleString()}</span>
-                      <span className="text-xs px-2 py-0.5 bg-sky-500/10 text-sky-400 rounded-full">
+                      <span className="text-emerald-400 font-bold">₹{item.negotiatedPrice.toLocaleString()}</span>
+                      <span className="text-xs px-2 py-0.5 bg-emerald-500/10 text-emerald-400 rounded-full">
                         Saved ₹{(item.originalPrice - item.negotiatedPrice).toLocaleString()}
                       </span>
                     </>
                   ) : (
-                    <span className="text-sky-400 font-bold">₹{item.originalPrice.toLocaleString()}</span>
+                    <span className="text-emerald-400 font-bold">₹{item.originalPrice.toLocaleString()}</span>
                   )}
                 </div>
 
@@ -133,10 +133,10 @@ export default function Cart({ tripId, open, onClose, onCheckout }) {
                       value={offerInput}
                       onChange={e => setOfferInput(e.target.value)}
                       placeholder={`Min ₹${Math.round(item.originalPrice * 0.8).toLocaleString()}`}
-                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-white/30 focus:border-sky-500 focus:outline-none"
+                      className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-white/30 focus:border-emerald-500 focus:outline-none"
                     />
                     <button onClick={() => negotiate(item)}
-                      className="px-4 py-2 bg-sky-500 hover:bg-sky-400 rounded-lg text-sm font-medium transition-colors">
+                      className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 rounded-lg text-sm font-medium transition-colors">
                       Offer
                     </button>
                     <button onClick={() => { setNegotiating(null); setOfferInput(''); }}
@@ -159,14 +159,14 @@ export default function Cart({ tripId, open, onClose, onCheckout }) {
           <div className="sticky bottom-0 bg-slate-900/95 backdrop-blur-xl border-t border-white/10 p-6 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-white/60">Total</span>
-              <span className="text-xl font-bold text-sky-400">₹{total.toLocaleString()}</span>
+              <span className="text-xl font-bold text-emerald-400">₹{total.toLocaleString()}</span>
             </div>
             {wallet && wallet.balance < total && (
               <p className="text-red-400 text-xs">Insufficient balance. Add ₹{(total - wallet.balance).toLocaleString()} more to your wallet.</p>
             )}
 
             {checkoutResult && (
-              <div className={`p-3 rounded-lg text-sm ${checkoutResult.success ? 'bg-sky-500/10 text-sky-400 border border-sky-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+              <div className={`p-3 rounded-lg text-sm ${checkoutResult.success ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                 {checkoutResult.success
                   ? `Booked ${checkoutResult.bookingsCreated} items! ₹${checkoutResult.totalPaid?.toLocaleString()} deducted. New balance: ₹${checkoutResult.newBalance?.toLocaleString()}`
                   : checkoutResult.error}
@@ -174,7 +174,7 @@ export default function Cart({ tripId, open, onClose, onCheckout }) {
             )}
 
             <button onClick={checkout} disabled={checkingOut || !wallet || wallet.balance < total}
-              className="w-full py-3 bg-gradient-to-r from-sky-500 to-violet-500 hover:from-sky-400 hover:to-violet-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition-all text-sm">
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-medium transition-all text-sm">
               {checkingOut ? 'Processing...' : `Pay ₹${total.toLocaleString()} from Wallet`}
             </button>
           </div>

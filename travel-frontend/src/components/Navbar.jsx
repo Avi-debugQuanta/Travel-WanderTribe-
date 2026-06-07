@@ -65,30 +65,30 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3">
             <span className="text-2xl sm:text-3xl">🏔️</span>
-            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               WanderTribe
             </span>
           </Link>
 
           <div className="hidden sm:flex items-center gap-4">
-            <Link to="/" className={`text-sm transition-colors ${location.pathname === '/' ? 'text-sky-400' : 'text-white/70 hover:text-white'}`}>Home</Link>
+            <Link to="/" className={`text-sm transition-colors ${location.pathname === '/' ? 'text-emerald-400' : 'text-white/70 hover:text-white'}`}>Home</Link>
             {user ? (
               <>
-                <Link to="/dashboard" className={`text-sm transition-colors ${location.pathname === '/dashboard' ? 'text-sky-400' : 'text-white/70 hover:text-white'}`}>My Trips</Link>
+                <Link to="/dashboard" className={`text-sm transition-colors ${location.pathname === '/dashboard' ? 'text-emerald-400' : 'text-white/70 hover:text-white'}`}>My Trips</Link>
 
                 {wallet && (
                   <button onClick={() => setShowAddFunds(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-500/10 border border-sky-500/20 rounded-lg hover:bg-sky-500/20 transition-colors">
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg hover:bg-emerald-500/20 transition-colors">
                     <span className="text-xs">💰</span>
-                    <span className="text-sky-400 text-sm font-medium">₹{wallet.balance.toLocaleString()}</span>
+                    <span className="text-emerald-400 text-sm font-medium">₹{wallet.balance.toLocaleString()}</span>
                   </button>
                 )}
 
-                <span className="text-sky-400 text-sm font-medium">Hi, {user.name}</span>
+                <span className="text-emerald-400 text-sm font-medium">Hi, {user.name}</span>
                 <button onClick={logout} className="text-sm text-white/50 hover:text-white transition-colors">Logout</button>
               </>
             ) : (
-              <Link to="/login" className="px-5 py-2.5 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-sky-500/20">
+              <Link to="/login" className="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-lg shadow-emerald-500/20">
                 Get Started
               </Link>
             )}
@@ -97,9 +97,9 @@ export default function Navbar() {
           <div className="sm:hidden flex items-center gap-2">
             {user && wallet && (
               <button onClick={() => setShowAddFunds(true)}
-                className="flex items-center gap-1 px-2 py-1 bg-sky-500/10 border border-sky-500/20 rounded-lg">
+                className="flex items-center gap-1 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                 <span className="text-[10px]">💰</span>
-                <span className="text-sky-400 text-xs font-medium">₹{wallet.balance.toLocaleString()}</span>
+                <span className="text-emerald-400 text-xs font-medium">₹{wallet.balance.toLocaleString()}</span>
               </button>
             )}
             <button onClick={() => setMobileOpen(!mobileOpen)} className="p-2 text-white/70 hover:text-white">
@@ -119,11 +119,11 @@ export default function Navbar() {
             {user ? (
               <>
                 <Link to="/dashboard" className="block py-2 text-white/70 hover:text-white">My Trips</Link>
-                <div className="py-2 text-sky-400 text-sm">Hi, {user.name}</div>
+                <div className="py-2 text-emerald-400 text-sm">Hi, {user.name}</div>
                 <button onClick={logout} className="block py-2 text-white/50 hover:text-white">Logout</button>
               </>
             ) : (
-              <Link to="/login" className="block py-2 text-sky-400 font-medium">Get Started</Link>
+              <Link to="/login" className="block py-2 text-emerald-400 font-medium">Get Started</Link>
             )}
           </div>
         )}
@@ -134,17 +134,17 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAddFunds(false)} />
           <div className="relative bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
             <h3 className="text-lg font-bold mb-1">Add Funds to Wallet</h3>
-            <p className="text-white/40 text-sm mb-4">Current balance: <span className="text-sky-400 font-medium">₹{wallet?.balance?.toLocaleString() || 0}</span></p>
+            <p className="text-white/40 text-sm mb-4">Current balance: <span className="text-emerald-400 font-medium">₹{wallet?.balance?.toLocaleString() || 0}</span></p>
 
             <div className="space-y-3">
               <input type="number" value={fundAmount} onChange={e => setFundAmount(e.target.value)}
                 placeholder="Enter amount (₹)"
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:border-sky-500 focus:outline-none" />
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:border-emerald-500 focus:outline-none" />
 
               <div className="flex gap-2">
                 {[1000, 2000, 5000, 10000].map(a => (
                   <button key={a} onClick={() => setFundAmount(String(a))}
-                    className="flex-1 py-2 bg-white/5 hover:bg-sky-500/10 border border-white/10 hover:border-sky-500/20 rounded-lg text-xs text-white/60 hover:text-sky-400 transition-colors">
+                    className="flex-1 py-2 bg-white/5 hover:bg-emerald-500/10 border border-white/10 hover:border-emerald-500/20 rounded-lg text-xs text-white/60 hover:text-emerald-400 transition-colors">
                     ₹{a.toLocaleString()}
                   </button>
                 ))}
@@ -154,7 +154,7 @@ export default function Navbar() {
                 <button onClick={() => setShowAddFunds(false)}
                   className="flex-1 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-sm transition-colors">Cancel</button>
                 <button onClick={addFunds} disabled={addingFunds || !fundAmount}
-                  className="flex-1 py-3 bg-sky-500 hover:bg-sky-400 disabled:opacity-50 rounded-xl text-sm font-medium transition-all">
+                  className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 rounded-xl text-sm font-medium transition-all">
                   {addingFunds ? 'Adding...' : 'Add Funds'}
                 </button>
               </div>

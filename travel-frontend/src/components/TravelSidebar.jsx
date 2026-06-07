@@ -194,17 +194,17 @@ export default function TravelSidebar({ destination }) {
 
       {/* Rotating Tips */}
       {data.tips && (
-        <div className="p-4 bg-gradient-to-r from-sky-500/10 to-violet-500/10 border border-sky-500/20 rounded-xl transition-all duration-500">
+        <div className="p-4 bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 rounded-xl transition-all duration-500">
           <div className="flex items-center gap-2 mb-2">
             <span className="animate-pulse text-lg">💡</span>
-            <p className="text-sky-400 text-sm font-semibold">Live Travel Tip</p>
+            <p className="text-emerald-400 text-sm font-semibold">Live Travel Tip</p>
           </div>
           <p className="text-white/70 text-sm leading-relaxed" key={tipIndex}>
             {data.tips[tipIndex]}
           </p>
           <div className="flex gap-1 mt-3">
             {data.tips.map((_, i) => (
-              <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i === tipIndex ? 'bg-sky-400' : 'bg-white/10'}`} />
+              <div key={i} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${i === tipIndex ? 'bg-emerald-400' : 'bg-white/10'}`} />
             ))}
           </div>
         </div>
@@ -223,13 +223,13 @@ export default function TravelSidebar({ destination }) {
       )}
 
       <div>
-        <h4 className="text-sm font-semibold text-violet-400 mb-3 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-emerald-400 mb-3 flex items-center gap-2">
           📋 Travel Guidelines
         </h4>
         <ul className="space-y-2">
           {data.guidelines.map((g, i) => (
             <li key={i} className="flex items-start gap-2 text-white/60 text-sm">
-              <span className="text-violet-400 mt-0.5 shrink-0">•</span>
+              <span className="text-emerald-400 mt-0.5 shrink-0">•</span>
               {g}
             </li>
           ))}

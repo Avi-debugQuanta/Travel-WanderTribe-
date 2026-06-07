@@ -57,7 +57,7 @@ public class GeminiService {
         "https://openrouter.ai/api/v1/chat/completions";
 
     private static final String GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
-    private static final String QWEN_MODEL = "qwen/qwen3-coder:free";
+    private static final String QWEN_MODEL = "qwen/qwen3-235b-a22b:free";
 
     private static final int MAX_PROMPT_CHARS = 3500;
     private static final int MAX_RESPONSE_TOKENS = 1024;

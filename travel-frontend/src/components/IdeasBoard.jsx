@@ -94,18 +94,18 @@ export default function IdeasBoard({ tripId }) {
       <div className="flex items-center justify-between mb-6">
         <div className="flex gap-2 flex-wrap">
           <button onClick={() => setFilter('')}
-            className={`px-4 py-2 rounded-full text-sm transition-colors ${!filter ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/50 hover:text-white'}`}>
+            className={`px-4 py-2 rounded-full text-sm transition-colors ${!filter ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/50 hover:text-white'}`}>
             All
           </button>
           {CATEGORIES.map(c => (
             <button key={c} onClick={() => setFilter(c)}
-              className={`px-4 py-2 rounded-full text-sm transition-colors ${filter === c ? 'bg-sky-500 text-white' : 'bg-white/5 text-white/50 hover:text-white'}`}>
+              className={`px-4 py-2 rounded-full text-sm transition-colors ${filter === c ? 'bg-emerald-500 text-white' : 'bg-white/5 text-white/50 hover:text-white'}`}>
               {CATEGORY_ICONS[c]} {c.toLowerCase()}
             </button>
           ))}
         </div>
         <button onClick={() => setShowForm(!showForm)}
-          className="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 rounded-xl text-base font-medium transition-colors">
+          className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 rounded-xl text-base font-medium transition-colors">
           + Add Idea
         </button>
       </div>
@@ -114,16 +114,16 @@ export default function IdeasBoard({ tripId }) {
         <form onSubmit={submit} className="mb-6 p-6 bg-white/5 border border-white/10 rounded-2xl space-y-4">
           <input type="text" placeholder="Idea title" required value={form.title}
             onChange={e => setForm({ ...form, title: e.target.value })}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-sky-500 focus:outline-none" />
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none" />
           <textarea placeholder="Describe your idea..." value={form.description}
             onChange={e => setForm({ ...form, description: e.target.value })} rows={2}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-sky-500 focus:outline-none resize-none" />
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none resize-none" />
           <div className="flex gap-3 items-center">
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
-              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-sky-500 focus:outline-none">
+              className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base focus:border-emerald-500 focus:outline-none">
               {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <button type="submit" className="px-6 py-3 bg-sky-500 hover:bg-sky-400 rounded-xl text-base font-medium transition-colors">
+            <button type="submit" className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl text-base font-medium transition-colors">
               Submit
             </button>
           </div>
@@ -140,7 +140,7 @@ export default function IdeasBoard({ tripId }) {
           {sorted.map(idea => {
             const comments = parseComments(idea.comments);
             return (
-              <div key={idea.id} className="relative p-5 bg-white/5 border border-white/10 rounded-2xl hover:border-sky-500/20 transition-colors">
+              <div key={idea.id} className="relative p-5 bg-white/5 border border-white/10 rounded-2xl hover:border-emerald-500/20 transition-colors">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -165,9 +165,9 @@ export default function IdeasBoard({ tripId }) {
                     {idea.description && <p className="text-white/50 text-base mt-1">{idea.description}</p>}
                   </div>
                   <button onClick={() => vote(idea.id)}
-                    className="flex flex-col items-center gap-1 px-4 py-3 bg-violet-500/10 hover:bg-violet-500/20 rounded-xl transition-colors">
-                    <span className="text-violet-400 text-lg">▲</span>
-                    <span className="text-violet-400 font-bold text-base">{idea.voteCount}</span>
+                    className="flex flex-col items-center gap-1 px-4 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-xl transition-colors">
+                    <span className="text-emerald-400 text-lg">▲</span>
+                    <span className="text-emerald-400 font-bold text-base">{idea.voteCount}</span>
                   </button>
                 </div>
 
@@ -199,7 +199,7 @@ export default function IdeasBoard({ tripId }) {
                     <div className="mt-3 space-y-2 animate-fadeIn">
                       {comments.map((c, ci) => (
                         <div key={ci} className="flex items-start gap-2 text-sm">
-                          <span className="text-violet-400 font-medium shrink-0">{c.user}:</span>
+                          <span className="text-emerald-400 font-medium shrink-0">{c.user}:</span>
                           <span className="text-white/60">{c.text}</span>
                         </div>
                       ))}
@@ -207,9 +207,9 @@ export default function IdeasBoard({ tripId }) {
                         <input type="text" value={commentText} onChange={e => setCommentText(e.target.value)}
                           placeholder="Write a comment..."
                           onKeyDown={e => e.key === 'Enter' && addComment(idea.id)}
-                          className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-white/30 focus:border-sky-500 focus:outline-none" />
+                          className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder:text-white/30 focus:border-emerald-500 focus:outline-none" />
                         <button onClick={() => addComment(idea.id)}
-                          className="px-4 py-2 bg-violet-500/20 text-violet-400 rounded-lg text-sm hover:bg-violet-500/30 transition-colors">
+                          className="px-4 py-2 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm hover:bg-emerald-500/30 transition-colors">
                           Post
                         </button>
                       </div>

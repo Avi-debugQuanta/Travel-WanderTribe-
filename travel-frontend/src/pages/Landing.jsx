@@ -30,27 +30,6 @@ const testimonials = [
   { name: 'Ananya M.', trip: 'Spiti Bike Trip', text: 'The AI knew exactly which passes are open in June. Saved us from a wasted day at Rohtang.' },
 ];
 
-const snowflakes = [
-  { left: 3, size: 2, opacity: 0.35, duration: 14, delay: 0 },
-  { left: 8, size: 1, opacity: 0.25, duration: 20, delay: 2 },
-  { left: 12, size: 3, opacity: 0.45, duration: 11, delay: 5 },
-  { left: 18, size: 2, opacity: 0.3, duration: 16, delay: 1 },
-  { left: 24, size: 1, opacity: 0.42, duration: 9, delay: 8 },
-  { left: 31, size: 2, opacity: 0.22, duration: 18, delay: 3 },
-  { left: 37, size: 3, opacity: 0.38, duration: 12, delay: 7 },
-  { left: 44, size: 1, opacity: 0.33, duration: 15, delay: 0.5 },
-  { left: 51, size: 2, opacity: 0.28, duration: 10, delay: 11 },
-  { left: 56, size: 1, opacity: 0.5, duration: 19, delay: 4 },
-  { left: 62, size: 3, opacity: 0.26, duration: 13, delay: 9 },
-  { left: 68, size: 2, opacity: 0.4, duration: 8, delay: 6 },
-  { left: 74, size: 1, opacity: 0.31, duration: 17, delay: 12 },
-  { left: 79, size: 2, opacity: 0.36, duration: 14.5, delay: 2.5 },
-  { left: 85, size: 3, opacity: 0.23, duration: 11.2, delay: 10 },
-  { left: 91, size: 1, opacity: 0.47, duration: 16.8, delay: 1.2 },
-  { left: 95, size: 2, opacity: 0.29, duration: 9.5, delay: 13 },
-  { left: 48, size: 1, opacity: 0.39, duration: 12.8, delay: 4.8 },
-];
-
 export default function Landing() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
 
@@ -60,64 +39,28 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="pt-20 bg-slate-950">
-      <style>{`
-        @keyframes snowfall {
-          from {
-            transform: translateY(-10vh);
-          }
-          to {
-            transform: translateY(110vh);
-          }
-        }
-        .snowfall-dot {
-          position: absolute;
-          border-radius: 9999px;
-          pointer-events: none;
-          animation: snowfall linear infinite;
-          background-color: rgb(226 232 240);
-          box-shadow: 0 0 4px rgba(56, 189, 248, 0.35);
-        }
-      `}</style>
-
-      {/* Hero with winter mountain */}
+    <div className="pt-20">
+      {/* Hero with parallax-like mountain layers */}
       <section className="relative min-h-[95vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1549880338-65ddcdfd037b?w=1920')] bg-cover bg-center opacity-35 scale-105 transition-transform duration-1000" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-b from-indigo-950/60 via-slate-900/70 to-[#020617]" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920')] bg-cover bg-center opacity-30 scale-105" />
+        <div className="absolute inset-0 bg-gradient-to-b from-emerald-950/60 via-slate-900/70 to-slate-900" />
 
+        {/* Floating mountain particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          {snowflakes.map((s, i) => (
-            <span
-              key={i}
-              className="snowfall-dot top-[-5vh]"
-              style={{
-                left: `${s.left}%`,
-                width: `${s.size}px`,
-                height: `${s.size}px`,
-                opacity: s.opacity,
-                animationDuration: `${s.duration}s`,
-                animationDelay: `${s.delay}s`,
-              }}
-            />
-          ))}
+          <div className="absolute top-20 left-10 w-2 h-2 bg-emerald-400/30 rounded-full animate-pulse" />
+          <div className="absolute top-40 right-20 w-3 h-3 bg-cyan-400/20 rounded-full animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute top-60 left-1/3 w-1.5 h-1.5 bg-blue-400/25 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-40 right-1/4 w-2 h-2 bg-emerald-300/20 rounded-full animate-pulse" style={{ animationDelay: '0.5s' }} />
+          <div className="absolute bottom-60 left-1/4 w-2.5 h-2.5 bg-cyan-300/15 rounded-full animate-pulse" style={{ animationDelay: '1.5s' }} />
         </div>
 
-        {/* Ambient icy sparkles */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-70">
-          <div className="absolute top-[18%] left-[11%] w-2 h-2 bg-sky-300/35 rounded-full blur-[1px] animate-pulse" />
-          <div className="absolute top-[32%] right-[18%] w-1.5 h-1.5 bg-violet-300/30 rounded-full blur-[0.5px] animate-pulse" style={{ animationDelay: '1.2s' }} />
-          <div className="absolute top-[48%] left-[35%] w-1 h-1 bg-sky-200/40 rounded-full animate-pulse" style={{ animationDelay: '2.4s' }} />
-          <div className="absolute bottom-[38%] right-[28%] w-2.5 h-2.5 bg-fuchsia-300/20 rounded-full blur-sm animate-pulse" style={{ animationDelay: '0.6s' }} />
-        </div>
-
-        <div className="relative text-center px-6 max-w-5xl z-10">
-          <div className="inline-block px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full text-sky-400 text-sm mb-8 shadow-lg shadow-sky-500/10 hover:border-sky-500/30 transition-all duration-300 animate-bounce [animation-duration:3s]">
+        <div className="relative text-center px-6 max-w-5xl">
+          <div className="inline-block px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-emerald-400 text-sm mb-8 animate-bounce" style={{ animationDuration: '3s' }}>
             Himachal Pradesh & Kashmir Specialists
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-8xl font-bold mb-6 leading-tight tracking-tight">
-            <span className="bg-gradient-to-r from-sky-400 via-blue-300 to-violet-400 bg-clip-text text-transparent drop-shadow-lg">
+            <span className="bg-gradient-to-r from-emerald-400 via-cyan-300 to-blue-400 bg-clip-text text-transparent drop-shadow-lg">
               Plan Together,
             </span>
             <br />
@@ -130,42 +73,39 @@ export default function Landing() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
-            <Link
-              to="/dashboard"
-              className="px-8 py-4 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 rounded-xl text-lg font-semibold text-white transition-all duration-300 hover:scale-105 shadow-xl shadow-sky-500/25"
-            >
-              Start Planning — It&apos;s Free
+            <Link to="/dashboard" className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-xl shadow-emerald-500/30">
+              Start Planning — It's Free
             </Link>
-            <a
-              href="#how-it-works"
-              className="px-8 py-4 border border-white/10 hover:border-sky-500/40 rounded-xl text-lg text-white/90 transition-all duration-300 hover:bg-white/5 backdrop-blur-xl hover:shadow-lg hover:shadow-violet-500/10"
-            >
+            <a href="#how-it-works" className="px-8 py-4 border border-white/20 hover:border-emerald-400/40 rounded-xl text-lg transition-all hover:bg-white/5 backdrop-blur-sm">
               How It Works
             </a>
           </div>
 
+          {/* Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 max-w-2xl mx-auto">
             {stats.map((s, i) => (
-              <div key={i} className="text-center p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl hover:border-sky-500/20 transition-colors duration-300">
-                <div className="text-2xl sm:text-3xl font-bold text-sky-400">{s.value}</div>
+              <div key={i} className="text-center">
+                <div className="text-2xl sm:text-3xl font-bold text-emerald-400">{s.value}</div>
                 <div className="text-white/40 text-xs sm:text-sm mt-1">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce z-10">
-          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex items-start justify-center p-2 backdrop-blur-sm">
-            <div className="w-1.5 h-3 bg-sky-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.5)]" />
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex items-start justify-center p-2">
+            <div className="w-1.5 h-3 bg-emerald-400 rounded-full animate-pulse" />
           </div>
         </div>
       </section>
 
+      {/* How It Works */}
       <section id="how-it-works" className="py-24 px-6 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-indigo-950/30 to-[#0f172a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-emerald-950/20 to-slate-900" />
         <div className="max-w-6xl mx-auto relative">
           <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
-            <span className="bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               How It Works
             </span>
           </h2>
@@ -173,14 +113,9 @@ export default function Landing() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {howItWorks.map((item, i) => (
-              <div
-                key={i}
-                className="group p-6 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-sky-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-sky-500/20"
-              >
-                <div className="text-5xl font-black text-sky-500/20 group-hover:text-sky-400/35 transition-colors mb-4">
-                  {item.step}
-                </div>
-                <h3 className="text-lg font-semibold mb-3 group-hover:text-sky-400 transition-colors">{item.title}</h3>
+              <div key={i} className="group p-6 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-emerald-500/5">
+                <div className="text-5xl font-black text-emerald-500/20 group-hover:text-emerald-500/40 transition-colors mb-4">{item.step}</div>
+                <h3 className="text-lg font-semibold mb-3 group-hover:text-emerald-400 transition-colors">{item.title}</h3>
                 <p className="text-white/40 text-sm leading-relaxed">{item.desc}</p>
               </div>
             ))}
@@ -188,7 +123,8 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-24 px-6 bg-[#0f172a]">
+      {/* Features */}
+      <section className="py-24 px-6">
         <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
           {[
             { icon: '🤖', title: 'AI Travel Buddy', desc: 'Chat with an AI that knows every chai stall in Kasol, every viewpoint in Spiti, and the best dal in Manali. It plans around YOUR vibe.' },
@@ -198,23 +134,21 @@ export default function Landing() {
             { icon: '🚗', title: 'Cabs & Drivers', desc: 'Select your vehicle and driver. Innova for families, Thar for offroad, Tempo for big groups. Drivers who know the hairpin bends.' },
             { icon: '💳', title: 'Payment Tips', desc: 'AI tells you where to pay cash vs card, which hotels offer online discounts, and where credit cards work in remote areas.' },
           ].map((f, i) => (
-            <div
-              key={i}
-              className="group p-8 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 hover:border-sky-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-violet-500/20"
-            >
-              <span className="text-4xl block mb-4 group-hover:scale-110 transition-transform duration-300">{f.icon}</span>
-              <h3 className="text-xl font-semibold mb-3 group-hover:text-sky-400 transition-colors">{f.title}</h3>
+            <div key={i} className="group p-8 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-emerald-500/5">
+              <span className="text-4xl block mb-4 group-hover:scale-110 transition-transform">{f.icon}</span>
+              <h3 className="text-xl font-semibold mb-3 group-hover:text-emerald-400 transition-colors">{f.title}</h3>
               <p className="text-white/40 leading-relaxed text-sm">{f.desc}</p>
             </div>
           ))}
         </div>
       </section>
 
+      {/* Destinations */}
       <section id="destinations" className="py-24 px-6 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617] via-indigo-950/20 to-[#0f172a]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-emerald-950/10 to-slate-900" />
         <div className="max-w-6xl mx-auto relative">
           <h2 className="text-4xl sm:text-5xl font-bold text-center mb-4">
-            <span className="bg-gradient-to-r from-sky-400 via-fuchsia-400 to-violet-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Explore Destinations
             </span>
           </h2>
@@ -222,22 +156,16 @@ export default function Landing() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {destinations.map((d, i) => (
-              <Link to="/dashboard" key={i} className="group relative rounded-2xl overflow-hidden aspect-[4/5] cursor-pointer border border-white/10 hover:border-sky-500/30 transition-all duration-500 shadow-xl shadow-black/40 hover:shadow-sky-500/15">
-                <img
-                  src={d.img}
-                  alt={d.name}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
+              <Link to="/dashboard" key={i} className="group relative rounded-2xl overflow-hidden aspect-[4/5] cursor-pointer">
+                <img src={d.img} alt={d.name} loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent group-hover:from-black/95 transition-colors duration-300" />
                 <div className="absolute bottom-0 p-6 w-full">
                   <h3 className="text-2xl font-bold mb-1">{d.name}</h3>
                   <p className="text-white/70 text-sm mb-2">{d.tagline}</p>
-                  <p className="text-sky-400 text-xs">{d.season}</p>
+                  <p className="text-emerald-400 text-xs">{d.season}</p>
                   <div className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="inline-block px-4 py-2 bg-sky-500 hover:bg-sky-400 rounded-lg text-sm font-medium text-white shadow-lg shadow-sky-500/25 transition-colors">
-                      Plan This Trip
-                    </span>
+                    <span className="px-4 py-2 bg-emerald-500 rounded-lg text-sm font-medium">Plan This Trip</span>
                   </div>
                 </div>
               </Link>
@@ -246,78 +174,59 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="py-24 px-6 bg-slate-950">
+      {/* Testimonials */}
+      <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-12">
-            <span className="bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
               Travelers Love Us
             </span>
           </h2>
 
           <div className="relative h-48">
             {testimonials.map((t, i) => (
-              <div
-                key={i}
-                className={`absolute inset-0 transition-all duration-500 ${
-                  i === activeTestimonial ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
-                }`}
-              >
-                <div className="mx-auto max-w-2xl p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-xl">
-                  <p className="text-xl text-white/70 italic mb-6 leading-relaxed">&quot;{t.text}&quot;</p>
-                  <p className="font-semibold text-sky-400">{t.name}</p>
-                  <p className="text-white/40 text-sm">{t.trip}</p>
-                </div>
+              <div key={i} className={`absolute inset-0 transition-all duration-500 ${
+                i === activeTestimonial ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+              }`}>
+                <p className="text-xl text-white/70 italic mb-6 leading-relaxed">"{t.text}"</p>
+                <p className="font-semibold text-emerald-400">{t.name}</p>
+                <p className="text-white/40 text-sm">{t.trip}</p>
               </div>
             ))}
           </div>
 
-          <div className="flex gap-2 justify-center mt-8">
+          <div className="flex gap-2 justify-center mt-6">
             {testimonials.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveTestimonial(i)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
-                  i === activeTestimonial ? 'bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.55)] scale-110' : 'bg-white/20 hover:bg-white/35'
-                }`}
-              />
+              <button key={i} onClick={() => setActiveTestimonial(i)}
+                className={`w-2.5 h-2.5 rounded-full transition-colors ${i === activeTestimonial ? 'bg-emerald-400' : 'bg-white/20'}`} />
             ))}
           </div>
         </div>
       </section>
 
+      {/* CTA */}
       <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto text-center p-12 rounded-3xl bg-gradient-to-br from-sky-500/10 to-violet-500/10 border border-sky-500/20 backdrop-blur-xl shadow-xl shadow-violet-500/10">
-          <h2 className="text-4xl font-bold mb-4 text-white">Ready for the Mountains?</h2>
+        <div className="max-w-4xl mx-auto text-center p-12 rounded-3xl bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20">
+          <h2 className="text-4xl font-bold mb-4">Ready for the Mountains?</h2>
           <p className="text-white/50 mb-8 text-lg">Start planning your Himachal or Kashmir trip in under 2 minutes. Completely free.</p>
-          <Link
-            to="/login"
-            className="inline-block px-10 py-4 bg-gradient-to-r from-sky-500 to-violet-600 hover:from-sky-400 hover:to-violet-500 rounded-xl text-lg font-semibold text-white transition-all duration-300 hover:scale-105 shadow-xl shadow-sky-500/25"
-          >
+          <Link to="/login" className="inline-block px-10 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 rounded-xl text-lg font-semibold transition-all hover:scale-105 shadow-xl shadow-emerald-500/30">
             Create Your Trip Now
           </Link>
         </div>
       </section>
 
-      <footer className="border-t border-white/10 py-12 px-6 bg-[#020617]">
+      {/* Footer */}
+      <footer className="border-t border-white/10 py-12 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl">🏔️</span>
-            <span className="font-bold bg-gradient-to-r from-sky-400 to-violet-400 bg-clip-text text-transparent">
-              WanderTribe
-            </span>
+            <span className="font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">WanderTribe</span>
           </div>
           <p className="text-white/30 text-sm">Built with Spring Boot + React + Gemini AI</p>
           <div className="flex gap-6 text-white/30 text-sm">
-            <Link to="/dashboard" className="hover:text-sky-400 transition-colors">
-              Dashboard
-            </Link>
-            <a href="#destinations" className="hover:text-sky-400 transition-colors">
-              Destinations
-            </a>
-            <a href="#how-it-works" className="hover:text-sky-400 transition-colors">
-              How It Works
-            </a>
+            <Link to="/dashboard" className="hover:text-white transition-colors">Dashboard</Link>
+            <a href="#destinations" className="hover:text-white transition-colors">Destinations</a>
+            <a href="#how-it-works" className="hover:text-white transition-colors">How It Works</a>
           </div>
         </div>
       </footer>

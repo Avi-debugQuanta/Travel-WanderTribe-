@@ -69,7 +69,7 @@ export default function TripSummary({ tripId, trip }) {
   const isLeader = trip?.createdBy === user?.name || trip?.createdBy === user?.email;
 
   const categories = [
-    { label: 'Hotels', value: hotels.reduce((s, b) => s + b.price, 0), color: 'bg-sky-500' },
+    { label: 'Hotels', value: hotels.reduce((s, b) => s + b.price, 0), color: 'bg-emerald-500' },
     { label: 'Cabs', value: cabs.reduce((s, b) => s + b.price, 0), color: 'bg-cyan-500' },
     { label: 'Drivers', value: drivers.reduce((s, b) => s + b.price, 0), color: 'bg-violet-500' },
     { label: 'Food', value: foodStalls.reduce((s, b) => s + b.price, 0), color: 'bg-amber-500' },
@@ -83,7 +83,7 @@ export default function TripSummary({ tripId, trip }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-10 h-10 border-3 border-sky-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -128,7 +128,7 @@ export default function TripSummary({ tripId, trip }) {
 
       <div className="px-4 sm:px-6 space-y-8">
         {/* AI Insights */}
-        <div className="p-5 bg-gradient-to-br from-violet-500/10 to-sky-500/10 border border-violet-500/20 rounded-2xl">
+        <div className="p-5 bg-gradient-to-br from-violet-500/10 to-emerald-500/10 border border-violet-500/20 rounded-2xl">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-bold flex items-center gap-2">
               <span>🤖</span> AI Trip Insights
@@ -149,8 +149,8 @@ export default function TripSummary({ tripId, trip }) {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="p-4 bg-gradient-to-br from-sky-500/10 to-sky-500/5 border border-sky-500/20 rounded-2xl text-center">
-            <p className="text-3xl font-bold text-sky-400">{bookings.length}</p>
+          <div className="p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 rounded-2xl text-center">
+            <p className="text-3xl font-bold text-emerald-400">{bookings.length}</p>
             <p className="text-white/50 text-sm mt-1">Bookings</p>
           </div>
           <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 border border-cyan-500/20 rounded-2xl text-center">
@@ -197,7 +197,7 @@ export default function TripSummary({ tripId, trip }) {
             <div className="flex flex-wrap gap-3">
               {members.map(m => (
                 <div key={m.id} className="flex items-center gap-3 px-4 py-3 bg-white/5 border border-white/10 rounded-2xl">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500/30 to-violet-500/30 flex items-center justify-center text-base font-bold">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500/30 to-cyan-500/30 flex items-center justify-center text-base font-bold">
                     {m.name?.charAt(0)?.toUpperCase()}
                   </div>
                   <div>
@@ -254,7 +254,7 @@ function BookingCard({ booking }) {
   try { details = JSON.parse(booking.details); } catch {}
 
   return (
-    <div className="flex gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl hover:border-sky-500/20 transition-all">
+    <div className="flex gap-3 p-4 bg-white/5 border border-white/10 rounded-2xl hover:border-emerald-500/20 transition-all">
       {details?.img && (
         <div className="w-16 h-16 sm:w-20 sm:h-20 shrink-0 rounded-xl overflow-hidden">
           <img src={details.img} alt="" className="w-full h-full object-cover" />
@@ -268,9 +268,9 @@ function BookingCard({ booking }) {
             {booking.proposedDate && <p className="text-white/40 text-xs">📅 {booking.proposedDate}</p>}
           </div>
           <div className="text-right shrink-0">
-            <p className="text-sky-400 font-bold text-lg">₹{booking.price?.toLocaleString()}</p>
+            <p className="text-emerald-400 font-bold text-lg">₹{booking.price?.toLocaleString()}</p>
             <span className={`text-xs px-2 py-0.5 rounded-full ${
-              booking.status === 'CONFIRMED' ? 'bg-sky-500/20 text-sky-400' :
+              booking.status === 'CONFIRMED' ? 'bg-emerald-500/20 text-emerald-400' :
               booking.status === 'CANCELLED' ? 'bg-red-500/20 text-red-400' :
               'bg-yellow-500/20 text-yellow-400'
             }`}>{booking.status}</span>

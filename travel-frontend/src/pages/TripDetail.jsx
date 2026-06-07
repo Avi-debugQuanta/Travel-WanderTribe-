@@ -87,7 +87,7 @@ export default function TripDetail() {
   if (!trip) return (
     <div className="pt-28 flex items-center justify-center min-h-screen">
       <div className="text-center">
-        <div className="animate-spin w-10 h-10 border-3 border-sky-500 border-t-transparent rounded-full mx-auto mb-4" />
+        <div className="animate-spin w-10 h-10 border-3 border-emerald-500 border-t-transparent rounded-full mx-auto mb-4" />
         <p className="text-white/40">Loading your trip...</p>
       </div>
     </div>
@@ -115,7 +115,7 @@ export default function TripDetail() {
               {trip.startDate && <span className="flex items-center gap-1">📅 {trip.startDate} — {trip.endDate}</span>}
               {trip.budget && <span className="flex items-center gap-1">💰 ₹{Number(trip.budget).toLocaleString()}</span>}
               {trip.travelStyle && (
-                <span className="px-3 py-1 bg-sky-500/20 text-sky-400 rounded-full text-xs font-medium">
+                <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-medium">
                   {trip.travelStyle}
                 </span>
               )}
@@ -125,11 +125,11 @@ export default function TripDetail() {
 
           <div className="flex items-center gap-2">
             <button onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="px-3 py-2 bg-white/5 border border-white/10 hover:border-sky-500/30 rounded-xl text-sm text-white/60 hover:text-white transition-colors">
+              className="px-3 py-2 bg-white/5 border border-white/10 hover:border-emerald-500/30 rounded-xl text-sm text-white/60 hover:text-white transition-colors">
               📍 Guide
             </button>
             <button onClick={() => setCartOpen(true)}
-              className="relative px-3 py-2 bg-white/5 border border-white/10 hover:border-violet-500/30 rounded-xl text-sm text-white/60 hover:text-white transition-colors">
+              className="relative px-3 py-2 bg-white/5 border border-white/10 hover:border-cyan-500/30 rounded-xl text-sm text-white/60 hover:text-white transition-colors">
               🛒 Cart
               {cartCount > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-cyan-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
@@ -138,7 +138,7 @@ export default function TripDetail() {
               )}
             </button>
             <button onClick={() => setInviteOpen(true)}
-              className="px-3 py-2 bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 rounded-xl text-sm text-sky-400 transition-colors">
+              className="px-3 py-2 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 rounded-xl text-sm text-emerald-400 transition-colors">
               👥 Members ({members.length})
             </button>
           </div>
@@ -149,7 +149,7 @@ export default function TripDetail() {
           <div className="flex items-center gap-2 mt-4">
             <div className="flex -space-x-2">
               {members.slice(0, 6).map(m => (
-                <div key={m.id} className="w-10 h-10 rounded-full bg-sky-500/20 border-2 border-slate-900 flex items-center justify-center text-sm font-medium" title={m.name}>
+                <div key={m.id} className="w-10 h-10 rounded-full bg-emerald-500/20 border-2 border-slate-900 flex items-center justify-center text-sm font-medium" title={m.name}>
                   {m.name?.charAt(0)?.toUpperCase()}
                 </div>
               ))}
@@ -170,7 +170,7 @@ export default function TripDetail() {
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`shrink-0 px-5 sm:px-6 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-medium transition-all ${
               tab === t.id
-                ? 'bg-sky-500 text-white shadow-lg shadow-sky-500/20'
+                ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20'
                 : 'bg-white/5 text-white/50 hover:text-white hover:bg-white/10'
             }`}>
             <span className="hidden sm:inline">{t.label}</span>
@@ -192,7 +192,7 @@ export default function TripDetail() {
         {sidebarOpen && (
           <div className="hidden lg:block w-[300px] shrink-0 bg-white/5 border border-white/10 rounded-2xl overflow-y-auto max-h-[700px]">
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-              <h3 className="text-sm font-semibold text-sky-400">📍 Travel Guide</h3>
+              <h3 className="text-sm font-semibold text-emerald-400">📍 Travel Guide</h3>
               <button onClick={() => setSidebarOpen(false)} className="text-white/30 hover:text-white p-1">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -243,7 +243,7 @@ export default function TripDetail() {
               {members.map(m => (
                 <div key={m.id} className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-sky-500/20 flex items-center justify-center text-xs font-medium">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs font-medium">
                       {m.name?.charAt(0)?.toUpperCase()}
                     </div>
                     <div>
@@ -267,9 +267,9 @@ export default function TripDetail() {
             <div className="flex gap-2">
               <input type="email" value={inviteEmail} onChange={e => setInviteEmail(e.target.value)}
                 placeholder="Enter email to invite..."
-                className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:border-sky-500 focus:outline-none" />
+                className="flex-1 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white text-sm placeholder:text-white/30 focus:border-emerald-500 focus:outline-none" />
               <button onClick={inviteMember}
-                className="px-5 py-2.5 bg-sky-500 hover:bg-sky-400 rounded-xl text-sm font-medium transition-colors">
+                className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 rounded-xl text-sm font-medium transition-colors">
                 Invite
               </button>
             </div>
@@ -289,7 +289,7 @@ export default function TripDetail() {
             </div>
 
             {inviteMsg && (
-              <p className={`text-sm mt-3 ${inviteMsg.includes('Failed') || inviteMsg.includes('No user') ? 'text-red-400' : 'text-sky-400'}`}>
+              <p className={`text-sm mt-3 ${inviteMsg.includes('Failed') || inviteMsg.includes('No user') ? 'text-red-400' : 'text-emerald-400'}`}>
                 {inviteMsg}
               </p>
             )}
@@ -311,10 +311,10 @@ export default function TripDetail() {
           <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 w-full max-w-sm mx-4 text-center">
             <span className="text-5xl block mb-4">🔒</span>
             <h3 className="text-2xl font-bold mb-2">Join this Trip</h3>
-            <p className="text-white/50 mb-6">Enter the trip password to access <span className="text-sky-400">{trip.destination}</span></p>
+            <p className="text-white/50 mb-6">Enter the trip password to access <span className="text-emerald-400">{trip.destination}</span></p>
             <input type="text" value={joinPassword} onChange={e => setJoinPassword(e.target.value)}
               placeholder="Enter trip password..."
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-sky-500 focus:outline-none mb-3" />
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none mb-3" />
             {joinError && <p className="text-red-400 text-sm mb-3">{joinError}</p>}
             <button onClick={async () => {
               try {
@@ -325,7 +325,7 @@ export default function TripDetail() {
               } catch (err) {
                 setJoinError(err.response?.data?.error || 'Wrong password');
               }
-            }} className="w-full py-3 bg-sky-500 hover:bg-sky-400 rounded-xl font-semibold transition-all">
+            }} className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition-all">
               Join Trip
             </button>
             <button onClick={() => navigate('/dashboard')} className="w-full mt-3 py-2.5 text-white/40 hover:text-white transition-colors text-sm">
