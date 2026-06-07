@@ -99,12 +99,26 @@ public class GeminiService {
                 .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " votes)")
                 .collect(Collectors.joining("\n"));
 
-        String prompt = SYSTEM_PROMPT + "\n\nCreate day-by-day itinerary:\n" +
-                "Dest: " + destination + " | " + startDate + " to " + endDate +
-                " | ₹" + budget + "/person | Style: " + travelStyle + "\n" +
-                (ideasText.isEmpty() ? "" : "Ideas:\n" + ideasText + "\n") +
-                (chatSummary != null && chatSummary.length() > 10 ? "Notes: " + truncate(chatSummary, 300) + "\n" : "") +
-                "\nFor each day: activities, hotel, food, transport, cost. End with total cost + packing list.";
+        String prompt = SYSTEM_PROMPT + "\n\nCreate a DETAILED ROADMAP-STYLE day-by-day travel itinerary:\n" +
+                "Destination: " + destination + " | Dates: " + startDate + " to " + endDate +
+                " | Budget: ₹" + budget + "/person | Style: " + travelStyle + "\n" +
+                (ideasText.isEmpty() ? "" : "Group Ideas:\n" + ideasText + "\n") +
+                (chatSummary != null && chatSummary.length() > 10 ? "Context: " + truncate(chatSummary, 300) + "\n" : "") +
+                "\nFORMAT EACH DAY AS:\n" +
+                "## Day X: [Title/Theme]\n" +
+                "**Route:** [From → To] (distance km, drive time)\n" +
+                "**Road Conditions:** [type of road, scenic level 1-5]\n\n" +
+                "### Morning\n- Activity with timing, location, entry fee\n" +
+                "### Afternoon\n- Activity with details\n" +
+                "### Evening\n- Activity with details\n\n" +
+                "**Stay:** Hotel name, ₹price/night, rating, why recommended\n" +
+                "**Food:** Breakfast spot (₹cost) | Lunch spot (₹cost) | Dinner spot (₹cost)\n" +
+                "**Transport:** Mode, cost, booking tip\n" +
+                "**Day Cost:** ₹total breakdown\n" +
+                "**Pro Tip:** Local insider tip for this day\n\n" +
+                "END WITH:\n## Total Trip Cost\nItemized breakdown\n\n" +
+                "## Packing List\nEssentials for this specific trip\n\n" +
+                "## Emergency Contacts\nLocal police, hospital, tourism helpline numbers";
 
         return callAI(truncate(prompt, MAX_PROMPT_CHARS));
     }

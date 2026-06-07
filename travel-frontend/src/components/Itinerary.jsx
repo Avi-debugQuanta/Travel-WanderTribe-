@@ -3,17 +3,20 @@ import { chatApi, proposalApi, bookingApi } from '../api';
 import ReactMarkdown from 'react-markdown';
 
 const DAY_IMAGES = {
-  manali: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=200',
-  kashmir: 'https://images.unsplash.com/photo-1597074866923-dc0589150458?w=200',
-  shimla: 'https://images.unsplash.com/photo-1572099606223-6e29045d7de3?w=200',
-  spiti: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=200',
-  kasol: 'https://images.unsplash.com/photo-1510797215324-95aa89f43c33?w=200',
-  rishikesh: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=200',
-  dharamshala: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=200',
-  leh: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200',
-  ladakh: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200',
-  gulmarg: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=200',
-  default: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200',
+  manali: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=400',
+  kashmir: 'https://images.unsplash.com/photo-1597074866923-dc0589150458?w=400',
+  shimla: 'https://images.unsplash.com/photo-1572099606223-6e29045d7de3?w=400',
+  spiti: 'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?w=400',
+  kasol: 'https://images.unsplash.com/photo-1510797215324-95aa89f43c33?w=400',
+  rishikesh: 'https://images.unsplash.com/photo-1482938289607-e9573fc25ebb?w=400',
+  dharamshala: 'https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?w=400',
+  leh: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+  ladakh: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
+  gulmarg: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400',
+  goa: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=400',
+  jaipur: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?w=400',
+  varanasi: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?w=400',
+  default: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
 };
 
 function parseDays(markdown) {
@@ -28,11 +31,19 @@ function parseDays(markdown) {
       if (current) days.push(current);
       const dayNum = dayMatch[1] || dayMatch[2] || days.length + 1;
       const title = line.replace(/^#{1,3}\s*/, '').trim();
-      current = { dayNum: parseInt(dayNum), title, content: '', places: [] };
+      current = { dayNum: parseInt(dayNum), title, content: '', route: '', roadCondition: '', stay: '', dayCost: '', proTip: '' };
     } else if (current) {
       current.content += line + '\n';
-      const placeMatch = line.match(/[-*]\s*\*\*(.+?)\*\*/);
-      if (placeMatch && current.places.length < 3) current.places.push(placeMatch[1]);
+      const routeMatch = line.match(/\*\*Route[:\*]*\*?\*?\s*(.*)/i);
+      if (routeMatch) current.route = routeMatch[1].replace(/\*\*/g, '').trim();
+      const roadMatch = line.match(/\*\*Road\s*Condition[s]?[:\*]*\*?\*?\s*(.*)/i);
+      if (roadMatch) current.roadCondition = roadMatch[1].replace(/\*\*/g, '').trim();
+      const stayMatch = line.match(/\*\*Stay[:\*]*\*?\*?\s*(.*)/i);
+      if (stayMatch) current.stay = stayMatch[1].replace(/\*\*/g, '').trim();
+      const costMatch = line.match(/\*\*Day\s*Cost[:\*]*\*?\*?\s*(.*)/i);
+      if (costMatch) current.dayCost = costMatch[1].replace(/\*\*/g, '').trim();
+      const tipMatch = line.match(/\*\*Pro\s*Tip[:\*]*\*?\*?\s*(.*)/i);
+      if (tipMatch) current.proTip = tipMatch[1].replace(/\*\*/g, '').trim();
     }
   }
   if (current) days.push(current);
@@ -47,36 +58,177 @@ function getImgForDay(title) {
   return DAY_IMAGES.default;
 }
 
-function VisualRoadmap({ days, activeDay, onSelectDay }) {
-  if (days.length === 0) return null;
+function CarIcon({ active }) {
   return (
-    <div className="mb-8 overflow-x-auto pb-4 scrollbar-hide">
-      <div className="flex items-start gap-0 min-w-max px-4">
+    <div className={`relative transition-all duration-500 ${active ? 'scale-125 -translate-y-1' : 'scale-100'}`}>
+      <svg className={`w-8 h-8 ${active ? 'text-emerald-400' : 'text-white/40'}`} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-5h14v5z"/>
+        <circle cx="7.5" cy="14.5" r="1.5"/>
+        <circle cx="16.5" cy="14.5" r="1.5"/>
+      </svg>
+      {active && (
+        <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-6 h-1 bg-emerald-400/30 rounded-full blur-sm animate-pulse" />
+      )}
+    </div>
+  );
+}
+
+function RoadmapVisual({ days, activeDay, onSelectDay }) {
+  if (days.length === 0) return null;
+
+  return (
+    <div className="relative mb-10 overflow-x-auto pb-6 scrollbar-hide">
+      <div className="flex items-center min-w-max px-6 py-4">
         {days.map((day, i) => (
-          <div key={i} className="flex items-start">
-            <button onClick={() => onSelectDay(i)}
-              className={`flex flex-col items-center transition-all group ${activeDay === i ? 'scale-110' : 'hover:scale-105'}`}>
-              <div className={`relative w-16 h-16 rounded-2xl overflow-hidden border-3 transition-all ${
-                activeDay === i ? 'border-emerald-400 shadow-lg shadow-emerald-500/30' : 'border-white/20 group-hover:border-white/40'
+          <div key={i} className="flex items-center">
+            <button onClick={() => onSelectDay(i)} className="flex flex-col items-center group relative">
+              {activeDay === i && (
+                <div className="absolute -top-10">
+                  <CarIcon active />
+                </div>
+              )}
+              <div className={`relative w-14 h-14 rounded-full border-[3px] transition-all duration-300 overflow-hidden ${
+                activeDay === i
+                  ? 'border-emerald-400 shadow-lg shadow-emerald-500/40 scale-110'
+                  : i < (activeDay ?? -1)
+                    ? 'border-emerald-600/50 opacity-80'
+                    : 'border-white/20 group-hover:border-white/40 group-hover:scale-105'
               }`}>
                 <img src={getImgForDay(day.title)} alt="" className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">Day {day.dayNum}</span>
+                <div className={`absolute inset-0 flex items-center justify-center ${
+                  activeDay === i ? 'bg-emerald-900/40' : 'bg-black/50'
+                }`}>
+                  <span className="text-white font-bold text-sm">{day.dayNum}</span>
                 </div>
               </div>
-              <span className={`mt-1.5 text-xs max-w-[80px] truncate ${activeDay === i ? 'text-emerald-400' : 'text-white/40'}`}>
-                {day.title.replace(/Day\s*\d+\s*[-:–]?\s*/i, '').slice(0, 20)}
+              <span className={`mt-2 text-[11px] max-w-[80px] text-center leading-tight ${
+                activeDay === i ? 'text-emerald-400 font-medium' : 'text-white/40'
+              }`}>
+                {day.title.replace(/Day\s*\d+\s*[-:–]?\s*/i, '').slice(0, 25)}
               </span>
+              {day.route && activeDay === i && (
+                <span className="mt-1 text-[9px] text-cyan-400/70 max-w-[90px] truncate">{day.route}</span>
+              )}
             </button>
+
             {i < days.length - 1 && (
-              <div className="flex items-center h-16 px-1">
-                <div className="w-8 h-0.5 bg-gradient-to-r from-emerald-500/60 to-white/10 relative">
-                  <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[3px] border-b-[3px] border-l-[5px] border-transparent border-l-emerald-500/60" />
+              <div className="flex items-center mx-1 relative">
+                <div className={`w-16 sm:w-24 h-[3px] rounded-full relative overflow-hidden ${
+                  i < (activeDay ?? -1) ? 'bg-emerald-500/60' : 'bg-white/10'
+                }`}>
+                  {i < (activeDay ?? -1) && (
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-emerald-600 animate-pulse" />
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-evenly opacity-30">
+                    <div className="w-2 h-full bg-white/40" />
+                    <div className="w-2 h-full bg-white/40" />
+                    <div className="w-2 h-full bg-white/40" />
+                  </div>
                 </div>
+                {activeDay === i && (
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2">
+                    <CarIcon active />
+                  </div>
+                )}
               </div>
             )}
           </div>
         ))}
+
+        <div className="ml-3 flex flex-col items-center">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+            <span className="text-xl">🏁</span>
+          </div>
+          <span className="mt-2 text-[11px] text-emerald-400/60">Finish</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DayCard({ day, isActive }) {
+  const [expanded, setExpanded] = useState(true);
+
+  return (
+    <div className={`rounded-2xl border overflow-hidden transition-all duration-300 ${
+      isActive ? 'border-emerald-500/40 shadow-xl shadow-emerald-500/10 bg-slate-800/80' : 'border-white/10 bg-white/5'
+    }`}>
+      <div className="relative h-44 sm:h-52 overflow-hidden">
+        <img src={getImgForDay(day.title)} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center">
+              <span className="text-emerald-400 font-bold text-sm">{day.dayNum}</span>
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">{day.title}</h3>
+              {day.route && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <svg className="w-3.5 h-3.5 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  <span className="text-cyan-400/80 text-xs">{day.route}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            {day.roadCondition && (
+              <span className="px-2 py-0.5 bg-amber-500/20 text-amber-300 text-[10px] rounded-full border border-amber-500/20">
+                🛣️ {day.roadCondition.slice(0, 40)}
+              </span>
+            )}
+            {day.dayCost && (
+              <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-[10px] rounded-full border border-emerald-500/20">
+                💰 {day.dayCost.slice(0, 30)}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5 sm:p-6">
+        <button onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-2 text-sm text-white/50 hover:text-white/80 mb-4 transition-colors">
+          <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+          {expanded ? 'Hide details' : 'Show full details'}
+        </button>
+
+        {expanded && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="prose prose-invert prose-sm max-w-none
+              prose-h3:text-emerald-400 prose-h3:text-sm prose-h3:font-bold prose-h3:mb-2 prose-h3:mt-4
+              prose-strong:text-cyan-300
+              prose-li:text-white/70 prose-li:text-sm
+              prose-p:text-white/70 prose-p:text-sm">
+              <ReactMarkdown>{day.content}</ReactMarkdown>
+            </div>
+
+            {day.stay && (
+              <div className="flex items-start gap-3 p-3 bg-violet-500/10 border border-violet-500/20 rounded-xl">
+                <span className="text-lg">🏨</span>
+                <div>
+                  <p className="text-violet-300 text-sm font-medium">Stay</p>
+                  <p className="text-white/70 text-sm">{day.stay}</p>
+                </div>
+              </div>
+            )}
+
+            {day.proTip && (
+              <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <span className="text-lg">💡</span>
+                <div>
+                  <p className="text-amber-300 text-sm font-medium">Pro Tip</p>
+                  <p className="text-white/70 text-sm">{day.proTip}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -103,7 +255,7 @@ export default function Itinerary({ tripId }) {
       setItinerary(data.itinerary);
       setBookings(bRes.data || []);
       setProposals((pRes.data || []).filter(p => p.status === 'APPROVED'));
-      setActiveDay(null);
+      setActiveDay(0);
     } catch {
       setItinerary('Failed to generate itinerary. Please try again.');
     }
@@ -127,146 +279,60 @@ export default function Itinerary({ tripId }) {
 
     const roadmapHTML = days.length > 0 ? `
       <div class="roadmap">
-        <h2 style="text-align:center;color:#10b981;margin-bottom:10px;">Trip Roadmap</h2>
+        <h2 style="text-align:center;color:#10b981;margin-bottom:10px;">🚗 Trip Roadmap</h2>
         <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-bottom:20px;">
-          ${days.map(d => `<div style="text-align:center;padding:8px 14px;background:#f0fdf4;border:1px solid #10b981;border-radius:12px;">
-            <strong style="color:#10b981;">Day ${d.dayNum}</strong><br/>
-            <span style="font-size:11px;color:#555;">${d.title.replace(/Day\s*\d+\s*[-:–]?\s*/i, '').slice(0, 30)}</span>
-          </div>`).join('<div style="display:flex;align-items:center;padding:0 2px;"><span style="color:#10b981;">&rarr;</span></div>')}
+          ${days.map((d, i) => `<div style="display:flex;align-items:center;">
+            <div style="text-align:center;padding:10px 16px;background:#f0fdf4;border:2px solid #10b981;border-radius:12px;">
+              <strong style="color:#10b981;font-size:16px;">Day ${d.dayNum}</strong><br/>
+              <span style="font-size:11px;color:#555;">${d.title.replace(/Day\s*\d+\s*[-:–]?\s*/i, '').slice(0, 30)}</span>
+              ${d.route ? `<br/><span style="font-size:10px;color:#0891b2;">${d.route}</span>` : ''}
+            </div>
+            ${i < days.length - 1 ? '<span style="font-size:20px;margin:0 6px;">🚗➜</span>' : ''}
+          </div>`).join('')}
+          <div style="display:flex;align-items:center;"><span style="font-size:24px;margin-left:6px;">🏁</span></div>
         </div>
       </div>` : '';
-
-    const bookingsHTML = (bookings.length > 0 || proposals.length > 0) ? `
-      <div style="page-break-before:always;margin-top:30px;">
-        <h2 style="color:#10b981;border-bottom:2px solid #10b981;padding-bottom:8px;">Booked Items</h2>
-        <table style="width:100%;border-collapse:collapse;margin:15px 0;font-size:12px;">
-          <thead><tr style="background:#f0fdf4;">
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Item</th>
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Type</th>
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Date</th>
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Price</th>
-          </tr></thead>
-          <tbody>
-            ${bookings.map(b => `<tr>
-              <td style="padding:6px;border:1px solid #ddd;">${b.providerName}</td>
-              <td style="padding:6px;border:1px solid #ddd;">${b.type}</td>
-              <td style="padding:6px;border:1px solid #ddd;">${b.proposedDate || '-'}</td>
-              <td style="padding:6px;border:1px solid #ddd;">&nbsp;${b.price?.toLocaleString()}</td>
-            </tr>`).join('')}
-            ${proposals.map(p => `<tr style="background:#f0fdf4;">
-              <td style="padding:6px;border:1px solid #ddd;">${p.itemName} (approved)</td>
-              <td style="padding:6px;border:1px solid #ddd;">${p.itemType}</td>
-              <td style="padding:6px;border:1px solid #ddd;">${p.proposedDate || '-'}</td>
-              <td style="padding:6px;border:1px solid #ddd;">&nbsp;${p.price?.toLocaleString()}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-      </div>` : '';
-
-    const transportRef = `
-      <div style="margin-top:30px;">
-        <h2 style="color:#10b981;border-bottom:2px solid #10b981;padding-bottom:8px;">Transport Quick Reference</h2>
-        <table style="width:100%;border-collapse:collapse;margin:15px 0;font-size:12px;">
-          <thead><tr style="background:#f0fdf4;">
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Route</th>
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Mode</th>
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Cost</th>
-            <th style="padding:8px;text-align:left;border:1px solid #ddd;">Duration</th>
-          </tr></thead>
-          <tbody>
-            <tr><td style="padding:6px;border:1px solid #ddd;">Delhi &rarr; Manali</td><td style="padding:6px;border:1px solid #ddd;">Volvo Bus</td><td style="padding:6px;border:1px solid #ddd;">&nbsp;1200-1800</td><td style="padding:6px;border:1px solid #ddd;">12-14 hrs</td></tr>
-            <tr><td style="padding:6px;border:1px solid #ddd;">Delhi &rarr; Shimla</td><td style="padding:6px;border:1px solid #ddd;">Volvo Bus</td><td style="padding:6px;border:1px solid #ddd;">&nbsp;800-1200</td><td style="padding:6px;border:1px solid #ddd;">8-9 hrs</td></tr>
-            <tr><td style="padding:6px;border:1px solid #ddd;">Delhi &rarr; Srinagar</td><td style="padding:6px;border:1px solid #ddd;">Flight</td><td style="padding:6px;border:1px solid #ddd;">&nbsp;3000-7000</td><td style="padding:6px;border:1px solid #ddd;">1.5 hrs</td></tr>
-            <tr><td style="padding:6px;border:1px solid #ddd;">Delhi &rarr; Leh</td><td style="padding:6px;border:1px solid #ddd;">Flight</td><td style="padding:6px;border:1px solid #ddd;">&nbsp;4000-10000</td><td style="padding:6px;border:1px solid #ddd;">1.5 hrs</td></tr>
-            <tr><td style="padding:6px;border:1px solid #ddd;">Delhi &rarr; Haridwar</td><td style="padding:6px;border:1px solid #ddd;">Train</td><td style="padding:6px;border:1px solid #ddd;">&nbsp;300-800</td><td style="padding:6px;border:1px solid #ddd;">4-5 hrs</td></tr>
-            <tr><td style="padding:6px;border:1px solid #ddd;">Kalka &rarr; Shimla</td><td style="padding:6px;border:1px solid #ddd;">Toy Train</td><td style="padding:6px;border:1px solid #ddd;">&nbsp;300-600</td><td style="padding:6px;border:1px solid #ddd;">5-6 hrs</td></tr>
-          </tbody>
-        </table>
-      </div>`;
-
-    const emergencySection = `
-      <div style="margin-top:20px;padding:15px;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;">
-        <h3 style="color:#92400e;margin-bottom:8px;">Emergency Numbers</h3>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:12px;color:#78350f;">
-          <span>Police: <strong>100</strong></span>
-          <span>Ambulance: <strong>102 / 108</strong></span>
-          <span>HRTC Helpline: <strong>0177-2658765</strong></span>
-          <span>HP Tourism: <strong>0177-2652369</strong></span>
-          <span>J&K Tourism: <strong>0194-2452690</strong></span>
-          <span>Disaster: <strong>1077</strong></span>
-        </div>
-      </div>`;
 
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>WanderTribe - Trip Itinerary</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            line-height: 1.7; color: #1a1a2e; padding: 40px;
-            max-width: 800px; margin: 0 auto;
-          }
-          .header {
-            text-align: center; margin-bottom: 20px; padding-bottom: 20px;
-            border-bottom: 3px solid #10b981;
-          }
-          .header h1 { color: #10b981; font-size: 28px; margin-bottom: 5px; }
-          .header p { color: #666; font-size: 14px; }
-          h1, h2, h3 { color: #1a1a2e; margin: 20px 0 10px; }
-          h2 { color: #10b981; border-bottom: 1px solid #e5e7eb; padding-bottom: 5px; }
-          h3 { color: #059669; }
-          ul, ol { margin-left: 20px; margin-bottom: 10px; }
-          li { margin-bottom: 5px; }
-          strong { color: #10b981; }
-          p { margin-bottom: 10px; }
-          .footer {
-            margin-top: 40px; padding-top: 15px; border-top: 2px solid #10b981;
-            text-align: center; color: #999; font-size: 12px;
-          }
-          .download-badge {
-            text-align: center; margin-bottom: 15px; padding: 10px;
-            background: linear-gradient(135deg, #10b981, #06b6d4);
-            border-radius: 8px; color: white; font-weight: bold;
-          }
-          @media print { body { padding: 20px; } .download-badge { display: none; } }
-        </style>
-      </head>
-      <body>
-        <div class="download-badge">WanderTribe AI-Curated Itinerary</div>
-        <div class="header">
-          <h1>WanderTribe</h1>
-          <p>AI-Curated Travel Itinerary &bull; Generated ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-        </div>
+      <!DOCTYPE html><html><head><title>WanderTribe - Trip Roadmap</title>
+      <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; line-height:1.7; color:#1a1a2e; padding:40px; max-width:850px; margin:0 auto; }
+        .header { text-align:center; margin-bottom:20px; padding-bottom:20px; border-bottom:3px solid #10b981; }
+        .header h1 { color:#10b981; font-size:28px; }
+        .header p { color:#666; font-size:14px; }
+        h2 { color:#10b981; border-bottom:1px solid #e5e7eb; padding-bottom:5px; margin:25px 0 12px; }
+        h3 { color:#059669; margin:15px 0 8px; }
+        ul,ol { margin-left:20px; margin-bottom:10px; } li { margin-bottom:5px; }
+        strong { color:#059669; } p { margin-bottom:10px; }
+        .footer { margin-top:40px; padding-top:15px; border-top:2px solid #10b981; text-align:center; color:#999; font-size:12px; }
+        @media print { body { padding:20px; } }
+      </style></head><body>
+        <div class="header"><h1>🏔️ WanderTribe</h1><p>AI-Curated Travel Roadmap &bull; ${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p></div>
         ${roadmapHTML}
         <div id="content"></div>
-        ${bookingsHTML}
-        ${transportRef}
-        ${emergencySection}
-        <div class="footer">
-          <p>Generated by WanderTribe AI &bull; wandertribe.app</p>
-          <p>Prices are estimates and may vary by season. Always confirm before booking.</p>
-        </div>
+        <div class="footer"><p>Generated by WanderTribe AI</p><p>Prices are estimates. Always confirm before booking.</p></div>
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
-        <script>
-          document.getElementById('content').innerHTML = marked.parse(${JSON.stringify(content)});
-          setTimeout(() => window.print(), 500);
-        <\/script>
-      </body>
-      </html>
+        <script>document.getElementById('content').innerHTML=marked.parse(${JSON.stringify(content)});setTimeout(()=>window.print(),500);<\/script>
+      </body></html>
     `);
     printWindow.document.close();
   };
 
   return (
     <div className="p-4 sm:p-6">
-      <div className="flex flex-wrap gap-3 mb-8">
+      <div className="flex flex-wrap gap-3 mb-6">
         <button onClick={generateItinerary} disabled={loading}
           className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50 rounded-xl font-semibold transition-all hover:scale-105 flex items-center gap-2 text-base shadow-lg shadow-emerald-500/20">
-          {loading ? '⏳ Generating...' : '🤖 Generate AI Itinerary'}
+          {loading ? (
+            <>
+              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+              Generating Roadmap...
+            </>
+          ) : (
+            <><span>🚗</span> Generate Trip Roadmap</>
+          )}
         </button>
         <button onClick={getSeasonInfo} disabled={loading}
           className="px-5 py-3 bg-cyan-500/20 border border-cyan-500/30 hover:bg-cyan-500/30 disabled:opacity-50 rounded-xl font-medium transition-all flex items-center gap-2 text-sm text-cyan-300">
@@ -281,113 +347,86 @@ export default function Itinerary({ tripId }) {
         )}
       </div>
 
-      <p className="text-white/30 text-sm mb-6">
-        The AI uses your group chat discussions, approved bookings, and food stall preferences to craft the perfect plan.
+      <p className="text-white/30 text-sm mb-8">
+        🗺️ AI generates a detailed roadmap with routes, distances, road conditions, stays, food spots, costs & pro tips based on your group's discussions.
       </p>
 
       {!itinerary && !seasonInfo && (
         <div className="text-center py-16 text-white/30">
-          <span className="text-6xl block mb-4">🗓️</span>
-          <p className="text-2xl mb-2">No itinerary yet</p>
-          <p className="max-w-md mx-auto text-base">Click "Generate AI Itinerary" to create a personalized day-by-day plan based on your group's chat, ideas, and approved bookings.</p>
-          <p className="mt-3 text-sm text-emerald-400/60">Includes bus timings, trains, flights, hotels, food stalls, and local transport.</p>
+          <div className="text-7xl mb-4 animate-bounce">🚗</div>
+          <p className="text-2xl mb-2">Ready for the road?</p>
+          <p className="max-w-md mx-auto text-base">Click "Generate Trip Roadmap" for a detailed day-by-day plan with driving routes, distances, hotels, food spots & costs.</p>
+          <div className="mt-6 flex justify-center gap-4 text-sm text-emerald-400/60">
+            <span>🛣️ Routes</span>
+            <span>🏨 Stays</span>
+            <span>🍽️ Food</span>
+            <span>💰 Costs</span>
+            <span>💡 Tips</span>
+          </div>
         </div>
       )}
 
       {itinerary && (
         <div className="mb-6">
-          {days.length > 0 && <VisualRoadmap days={days} activeDay={activeDay} onSelectDay={(i) => setActiveDay(activeDay === i ? null : i)} />}
+          {days.length > 0 && (
+            <RoadmapVisual
+              days={days}
+              activeDay={activeDay}
+              onSelectDay={(i) => setActiveDay(activeDay === i ? null : i)}
+            />
+          )}
 
-          {days.length > 0 && activeDay !== null ? (
-            <div className="animate-fadeIn">
-              <div className="bg-white/5 border border-emerald-500/20 rounded-2xl overflow-hidden">
-                <div className="relative h-32 overflow-hidden">
-                  <img src={getImgForDay(days[activeDay].title)} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-900/90 to-slate-900/50 flex items-center px-6">
-                    <div>
-                      <span className="text-emerald-400 text-sm font-medium">Day {days[activeDay].dayNum}</span>
-                      <h3 className="text-2xl font-bold">{days[activeDay].title}</h3>
-                      {days[activeDay].places.length > 0 && (
-                        <div className="flex gap-2 mt-1">
-                          {days[activeDay].places.map((p, j) => (
-                            <span key={j} className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-full">{p}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+          {days.length > 0 ? (
+            <div className="space-y-6">
+              {activeDay !== null ? (
+                <div className="animate-fadeIn">
+                  <DayCard day={days[activeDay]} isActive />
+                  <div className="flex gap-3 mt-4">
+                    {activeDay > 0 && (
+                      <button onClick={() => setActiveDay(activeDay - 1)}
+                        className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition-colors flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7"/></svg>
+                        Day {days[activeDay - 1].dayNum}
+                      </button>
+                    )}
+                    <button onClick={() => setActiveDay(null)}
+                      className="px-4 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-sm text-emerald-400 hover:bg-emerald-500/20 transition-colors">
+                      View All Days
+                    </button>
+                    {activeDay < days.length - 1 && (
+                      <button onClick={() => setActiveDay(activeDay + 1)}
+                        className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-sm hover:bg-white/10 transition-colors flex items-center gap-2 ml-auto">
+                        Day {days[activeDay + 1].dayNum}
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+                      </button>
+                    )}
                   </div>
                 </div>
-                <div className="p-6 prose prose-invert prose-sm sm:prose-base max-w-none">
-                  <ReactMarkdown>{days[activeDay].content}</ReactMarkdown>
-                </div>
-                <div className="px-6 pb-4 flex gap-2">
-                  {activeDay > 0 && (
-                    <button onClick={() => setActiveDay(activeDay - 1)}
-                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition-colors">
-                      ← Day {days[activeDay - 1].dayNum}
-                    </button>
-                  )}
-                  <button onClick={() => setActiveDay(null)}
-                    className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition-colors">
-                    View Full
-                  </button>
-                  {activeDay < days.length - 1 && (
-                    <button onClick={() => setActiveDay(activeDay + 1)}
-                      className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm hover:bg-white/10 transition-colors ml-auto">
-                      Day {days[activeDay + 1].dayNum} →
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-                  <span>🗺️</span> Your AI-Curated Itinerary
-                </h3>
-                {days.length > 0 && (
-                  <span className="text-sm text-white/40">Click day nodes above to navigate</span>
-                )}
-              </div>
-
-              {days.length > 0 ? (
-                <div className="space-y-6">
+              ) : (
+                <div className="grid gap-5">
                   {days.map((day, i) => (
-                    <div key={i} className="flex gap-4">
-                      <div className="flex flex-col items-center shrink-0">
-                        <button onClick={() => setActiveDay(i)}
-                          className="w-10 h-10 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-xs font-bold text-emerald-400 hover:bg-emerald-500/30 transition-colors">
-                          {day.dayNum}
-                        </button>
-                        {i < days.length - 1 && <div className="w-0.5 flex-1 bg-gradient-to-b from-emerald-500/40 to-white/5 min-h-[60px]" />}
-                      </div>
-                      <div className="flex-1 pb-4">
-                        <h4 className="font-bold text-lg text-emerald-400 mb-2">{day.title}</h4>
-                        <div className="prose prose-invert prose-sm max-w-none text-white/70">
-                          <ReactMarkdown>{day.content.slice(0, 500) + (day.content.length > 500 ? '...' : '')}</ReactMarkdown>
-                        </div>
-                        {day.content.length > 500 && (
-                          <button onClick={() => setActiveDay(i)} className="text-emerald-400 text-sm mt-2 hover:underline">
-                            Read full day →
-                          </button>
-                        )}
-                      </div>
+                    <div key={i} onClick={() => setActiveDay(i)} className="cursor-pointer">
+                      <DayCard day={day} isActive={false} />
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="prose prose-invert prose-sm sm:prose-lg max-w-none">
-                  <ReactMarkdown>{itinerary}</ReactMarkdown>
-                </div>
               )}
+            </div>
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 sm:p-8">
+              <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
+                <span>🗺️</span> Your AI-Curated Roadmap
+              </h3>
+              <div className="prose prose-invert prose-sm sm:prose-lg max-w-none">
+                <ReactMarkdown>{itinerary}</ReactMarkdown>
+              </div>
             </div>
           )}
         </div>
       )}
 
       {seasonInfo && (
-        <div className="bg-white/5 border border-cyan-500/20 rounded-2xl p-5 sm:p-8">
+        <div className="bg-white/5 border border-cyan-500/20 rounded-2xl p-5 sm:p-8 mt-6">
           <h3 className="text-xl sm:text-2xl font-bold mb-6 flex items-center gap-2">
             <span>📅</span> Season Guide
           </h3>

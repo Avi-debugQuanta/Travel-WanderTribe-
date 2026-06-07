@@ -1,10 +1,14 @@
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
-import { Component } from 'react';
+import { Component, useState, createContext, useContext } from 'react';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import TripDetail from './pages/TripDetail';
 import Login from './pages/Login';
+import AmbientAudio from './components/AmbientAudio';
+
+export const AudioContext = createContext({ playing: false, volume: 0.5, toggle: () => {}, setVolume: () => {} });
+export const useAudio = () => useContext(AudioContext);
 
 class ErrorBoundary extends Component {
   constructor(props) { super(props); this.state = { error: null }; }
@@ -21,19 +25,32 @@ class ErrorBoundary extends Component {
 }
 
 function App() {
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const [audioVolume, setAudioVolume] = useState(0.5);
+
+  const audioValue = {
+    playing: audioPlaying,
+    volume: audioVolume,
+    toggle: () => setAudioPlaying(p => !p),
+    setVolume: (v) => setAudioVolume(v),
+  };
+
   return (
     <ErrorBoundary>
-      <Router>
-        <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white">
-          <Navbar />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/trip/:id" element={<TripDetail />} />
-          </Routes>
-        </div>
-      </Router>
+      <AudioContext.Provider value={audioValue}>
+        <Router>
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-950 to-slate-900 text-white">
+            <Navbar />
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/trip/:id" element={<TripDetail />} />
+            </Routes>
+          </div>
+        </Router>
+        <AmbientAudio playing={audioPlaying} volume={audioVolume} />
+      </AudioContext.Provider>
     </ErrorBoundary>
   );
 }

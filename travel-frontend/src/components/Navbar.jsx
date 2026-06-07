@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { walletApi } from '../api';
+import { useAudio } from '../App';
 
 export default function Navbar() {
   const [user, setUser] = useState(null);
@@ -11,6 +12,7 @@ export default function Navbar() {
   const [fundAmount, setFundAmount] = useState('');
   const [addingFunds, setAddingFunds] = useState(false);
   const location = useLocation();
+  const { playing, toggle } = useAudio();
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -69,6 +71,20 @@ export default function Navbar() {
               WanderTribe
             </span>
           </Link>
+
+          <button onClick={toggle} title={playing ? 'Mute mountain breeze' : 'Play mountain breeze'}
+            className={`ml-2 p-2 rounded-lg transition-all ${playing ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-white/40 hover:text-white/70'}`}>
+            {playing ? (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+            )}
+          </button>
 
           <div className="hidden sm:flex items-center gap-4">
             <Link to="/" className={`text-sm transition-colors ${location.pathname === '/' ? 'text-emerald-400' : 'text-white/70 hover:text-white'}`}>Home</Link>
