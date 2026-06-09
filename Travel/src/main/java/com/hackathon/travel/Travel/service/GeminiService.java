@@ -7,6 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.http.MediaType;
 import org.springframework.core.ParameterizedTypeReference;
+import com.hackathon.travel.Travel.models.Place;
+import com.hackathon.travel.Travel.models.TrekInfo;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -18,6 +22,9 @@ public class GeminiService {
 
     private final RestClient restClient;
     private final DestinationKnowledgeBase knowledgeBase;
+    private final RetrievalService retrievalService;
+    private final RoutePlannerService routePlannerService;
+    private final RouteDatasetLoader routeDataset;
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
@@ -59,7 +66,7 @@ public class GeminiService {
     private static final String GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
     private static final String QWEN_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
 
-    private static final int MAX_PROMPT_CHARS = 4000;
+    private static final int MAX_PROMPT_CHARS = 7000;
     private static final int MAX_RESPONSE_TOKENS = 1200;
 
     private static final String SYSTEM_PROMPT =
@@ -72,9 +79,15 @@ public class GeminiService {
         "hotel booking links (MakeMyTrip/Goibibo), and local guide recommendations. " +
         "Format in rich markdown with emojis for visual appeal.";
 
-    public GeminiService(DestinationKnowledgeBase knowledgeBase) {
+    public GeminiService(DestinationKnowledgeBase knowledgeBase,
+                         RetrievalService retrievalService,
+                         RoutePlannerService routePlannerService,
+                         RouteDatasetLoader routeDataset) {
         this.restClient = RestClient.create();
         this.knowledgeBase = knowledgeBase;
+        this.retrievalService = retrievalService;
+        this.routePlannerService = routePlannerService;
+        this.routeDataset = routeDataset;
     }
 
     public String chat(String userMessage, List<ChatMessage> history, String tripContext) {
@@ -104,27 +117,154 @@ public class GeminiService {
                 .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " upvotes)")
                 .collect(Collectors.joining("\n"));
 
-        String prompt = SYSTEM_PROMPT + "\n\n" +
-                "ROAD-TRIP ITINERARY for: " + destination + " | " + startDate + "→" + endDate +
-                " | ₹" + budget + "/person | Style: " + travelStyle + "\n" +
-                (ideasText.isEmpty() ? "" : "Group ideas: " + ideasText + "\n") +
-                (chatSummary != null && chatSummary.length() > 10 ? "Notes: " + truncate(chatSummary, 200) + "\n" : "") +
-                "\nFor EACH day include:\n" +
-                "## Day X: [Title]\n" +
-                "**Route:** A→B→C (XX km, X hrs, NH-XX)\n" +
-                "**Scenic:** ★★★★☆\n" +
-                "Route stops table: | Km | Stop | Activity | Duration |\n" +
-                "Hour-by-hour schedule (6AM-10PM) with restaurant names, ⭐ratings, ₹costs\n" +
-                "Hotel: name, ⭐rating (reviews), ₹price, 📞phone, booking link\n" +
-                "Food table: | Meal | Place | Dish | ₹Cost | ⭐ | 📞Phone |\n" +
-                "Risk table: | Activity | 🟢Safe/🟡Moderate/🔴Risky | Tip |\n" +
-                "Guide: name, 📞phone, ₹cost/day (if adventure activities)\n" +
-                "Day budget table\n" +
-                "3 insider tips\n\n" +
-                "End with: Total budget table, Packing list, Emergency numbers, Apps needed.\n" +
-                "Use rich markdown, emojis, tables. Include real dhaba names on route with phone numbers.";
+        int totalDays = computeDays(startDate, endDate);
+        int month = parseMonth(startDate);
 
-        return callAI(truncate(prompt, MAX_PROMPT_CHARS));
+        // --- RAG: retrieve grounded places + plan a coherent route ---
+        String groundedContext = buildGroundedContext(destination, travelStyle, ideas, month, totalDays);
+
+        StringBuilder prompt = new StringBuilder(SYSTEM_PROMPT).append("\n\n");
+        prompt.append("ROAD-TRIP ITINERARY for: ").append(destination)
+              .append(" | ").append(startDate).append("→").append(endDate)
+              .append(" | ₹").append(budget).append("/person | Style: ").append(travelStyle)
+              .append(" | ").append(totalDays).append(" days\n");
+        if (!ideasText.isEmpty()) prompt.append("Group ideas: ").append(ideasText).append("\n");
+        if (chatSummary != null && chatSummary.length() > 10) {
+            prompt.append("Notes: ").append(truncate(chatSummary, 200)).append("\n");
+        }
+
+        if (groundedContext != null && !groundedContext.isBlank()) {
+            prompt.append("\n=== VERIFIED ROUTE DATA (use ONLY these places, distances & ratings — do NOT invent locations or place hotels in the wrong town) ===\n");
+            prompt.append(groundedContext);
+            prompt.append("\nFollow the day-by-day route ABOVE exactly. Every place you mention must come from this verified data.\n");
+        }
+
+        prompt.append("\nFor EACH day include:\n")
+              .append("## Day X: [Title]\n")
+              .append("**Route:** A→B→C (use the verified km, hrs & road from above)\n")
+              .append("**Scenic:** ★★★★☆\n")
+              .append("Route stops table: | Km | Stop | Activity | Duration |\n")
+              .append("Hour-by-hour schedule (6AM-10PM) with real restaurant names, ⭐ratings, ₹costs\n")
+              .append("Hotel: name, ⭐rating (reviews), ₹price, 📞phone, booking link\n")
+              .append("Food table: | Meal | Place | Dish | ₹Cost | ⭐ | 📞Phone |\n")
+              .append("Risk table: | Activity | 🟢Safe/🟡Moderate/🔴Risky | Tip |\n")
+              .append("Guide: name, 📞phone, ₹cost/day (if adventure activities)\n")
+              .append("Day budget table\n")
+              .append("3 insider tips\n\n")
+              .append("End with: Total budget table, Packing list, Emergency numbers, Apps needed.\n")
+              .append("Use rich markdown, emojis, tables. Include real dhaba names on route with phone numbers.");
+
+        return callAI(truncate(prompt.toString(), MAX_PROMPT_CHARS));
+    }
+
+    /**
+     * Builds the grounded "facts block" the LLM must adhere to: a verified,
+     * geographically ordered day-by-day route with real distances, ratings and
+     * seasonal notes pulled from our route-graph knowledge base.
+     */
+    private String buildGroundedContext(String destination, String travelStyle,
+                                        List<Idea> ideas, int month, int totalDays) {
+        try {
+            int maxPlaces = Math.max(6, Math.min(16, totalDays * 3));
+            RetrievalService.RetrievalResult retrieval =
+                    retrievalService.retrievePlaces(destination, travelStyle, ideas, month, maxPlaces);
+            if (retrieval == null || retrieval.isEmpty()) {
+                return null; // unknown region — let the model free-form (other regions not yet in dataset)
+            }
+
+            List<RoutePlannerService.DayPlan> days =
+                    routePlannerService.plan(retrieval.places, retrieval.entryHubId,
+                            Math.max(1, totalDays), travelStyle);
+            if (days.isEmpty()) return null;
+
+            StringBuilder sb = new StringBuilder();
+            for (RoutePlannerService.DayPlan day : days) {
+                sb.append("Day ").append(day.day).append(": ");
+                List<String> names = new ArrayList<>();
+                for (Place p : day.places) names.add(p.getName());
+                sb.append(String.join(" → ", names));
+                if (day.driveKm > 0) {
+                    sb.append("  [").append(fmt(day.driveKm)).append(" km, ")
+                      .append(fmt(day.driveHours)).append(" hrs drive]");
+                }
+                sb.append("\n");
+
+                for (RoutePlannerService.Leg leg : day.legs) {
+                    sb.append("   • ").append(leg.from.getName()).append("→").append(leg.to.getName())
+                      .append(": ").append(fmt(leg.km)).append(" km, ").append(fmt(leg.hours)).append(" hrs, ")
+                      .append(leg.mode).append(", risk ").append(riskEmoji(leg.risk));
+                    if (leg.viaNames != null && !leg.viaNames.isEmpty()) {
+                        sb.append(" via ").append(String.join(", ", leg.viaNames));
+                    }
+                    sb.append("\n");
+                }
+                for (Place p : day.places) {
+                    sb.append("   - ").append(p.getName())
+                      .append(" (").append(p.getType()).append(", ").append(p.getAltitude_m()).append("m, ⭐")
+                      .append(p.getRating()).append("/").append(p.getReviewCount()).append(" reviews): ")
+                      .append(p.getReviewSnippet());
+                    if (p.getTags() != null && !p.getTags().isEmpty()) {
+                        sb.append(" [").append(String.join(", ", p.getTags())).append("]");
+                    }
+                    sb.append("\n");
+                }
+            }
+
+            // Relevant treks across the chosen places.
+            List<String> placeIds = new ArrayList<>();
+            for (RoutePlannerService.DayPlan d : days)
+                for (Place p : d.places) placeIds.add(p.getId());
+            List<TrekInfo> treks = routeDataset.getTreksForPlaces(placeIds);
+            if (!treks.isEmpty()) {
+                sb.append("\nTreks available on this route:\n");
+                for (TrekInfo t : treks) {
+                    sb.append("   - ").append(t.getName()).append(" (").append(t.getDifficulty())
+                      .append(", ").append(t.getDays()).append("d, ").append(t.getAltitude_m()).append("m")
+                      .append(t.isPermit_required() ? ", PERMIT required" : "")
+                      .append(t.isGuide_recommended() ? ", guide recommended" : "")
+                      .append("): ").append(t.getHighlights()).append("\n");
+                }
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            System.out.println("[WanderTribe] Grounded context failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String fmt(double v) {
+        if (v == Math.floor(v)) return String.valueOf((long) v);
+        return String.valueOf(Math.round(v * 10.0) / 10.0);
+    }
+
+    private String riskEmoji(String risk) {
+        if (risk == null) return "🟢";
+        switch (risk.toLowerCase()) {
+            case "red": return "🔴";
+            case "amber": return "🟡";
+            default: return "🟢";
+        }
+    }
+
+    private int computeDays(String startDate, String endDate) {
+        try {
+            LocalDate s = LocalDate.parse(startDate.substring(0, 10));
+            LocalDate e = LocalDate.parse(endDate.substring(0, 10));
+            long d = ChronoUnit.DAYS.between(s, e) + 1;
+            if (d < 1) return 1;
+            if (d > 15) return 15;
+            return (int) d;
+        } catch (Exception ex) {
+            return 4;
+        }
+    }
+
+    private int parseMonth(String date) {
+        try {
+            return LocalDate.parse(date.substring(0, 10)).getMonthValue();
+        } catch (Exception ex) {
+            return 0;
+        }
     }
 
     public String getSeasonRecommendation(String destination) {
