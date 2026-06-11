@@ -64,10 +64,18 @@ public class GeminiService {
         "https://openrouter.ai/api/v1/chat/completions";
 
     private static final String GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
-    private static final String QWEN_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+
+    // Free OpenRouter models tried in order. gpt-oss-120b is an instruct model
+    // that returns clean markdown with no reasoning leak; the rest are fallbacks
+    // for when the primary is rate-limited (HTTP 429).
+    private static final String[] OPENROUTER_MODELS = {
+        "openai/gpt-oss-120b:free",
+        "meta-llama/llama-3.3-70b-instruct:free",
+        "qwen/qwen3-next-80b-a3b-instruct:free"
+    };
 
     private static final int MAX_PROMPT_CHARS = 7000;
-    private static final int MAX_RESPONSE_TOKENS = 1200;
+    private static final int MAX_RESPONSE_TOKENS = 1600;
 
     private static final String SYSTEM_PROMPT =
         "You are WanderTribe AI — the world's most detailed Indian road-trip planner. " +
@@ -77,7 +85,10 @@ public class GeminiService {
         "distances in km, drive times, risk/adventure levels (🟢Safe 🟡Moderate 🔴Risky), " +
         "restaurant phone numbers for reservation (format: 📞+91-XXXXX-XXXXX), " +
         "hotel booking links (MakeMyTrip/Goibibo), and local guide recommendations. " +
-        "Format in rich markdown with emojis for visual appeal.";
+        "Format in rich markdown with emojis for visual appeal. " +
+        "CRITICAL: Output ONLY the final answer. Do NOT show your reasoning, planning, " +
+        "thoughts, or any meta commentary like 'We need to' or 'Let me'. " +
+        "Begin directly with the content (a markdown heading).";
 
     public GeminiService(DestinationKnowledgeBase knowledgeBase,
                          RetrievalService retrievalService,
@@ -134,9 +145,12 @@ public class GeminiService {
         }
 
         if (groundedContext != null && !groundedContext.isBlank()) {
-            prompt.append("\n=== VERIFIED ROUTE DATA (use ONLY these places, distances & ratings — do NOT invent locations or place hotels in the wrong town) ===\n");
+            prompt.append("\n=== VERIFIED ROUTE DATA (use ONLY these towns/stops, distances & ratings — do NOT invent towns or place hotels in the wrong town) ===\n");
             prompt.append(groundedContext);
-            prompt.append("\nFollow the day-by-day route ABOVE exactly. Every place you mention must come from this verified data.\n");
+            prompt.append("\nRULES:\n");
+            prompt.append("1. Follow the day-by-day route ABOVE exactly — same towns, same order, same km/hours.\n");
+            prompt.append("2. Never add a town/village that is not in the verified data, and never move a place to a different valley.\n");
+            prompt.append("3. You MAY name real hotels, cafes, dhabas and guides that are physically located IN these verified towns (e.g. a cafe in Old Manali) — keep them realistic with ₹ prices and 📞 phone numbers.\n");
         }
 
         prompt.append("\nFor EACH day include:\n")
@@ -307,21 +321,32 @@ public class GeminiService {
                "- Gemini: " + (lastGeminiError.isEmpty() ? "no key" : lastGeminiError);
     }
 
-    @SuppressWarnings("unchecked")
     private String callQwen(String prompt) {
         String key = getOpenRouterKey();
         if (key.isBlank()) {
             lastQwenError = "no key";
             return null;
         }
+        // Try each free model in turn; skip ones that are rate-limited (429).
+        for (String model : OPENROUTER_MODELS) {
+            String result = callOpenRouterModel(model, key, prompt);
+            if (result != null && !result.isBlank()) {
+                System.out.println("[WanderTribe] OpenRouter served by: " + model);
+                return result;
+            }
+        }
+        return null;
+    }
 
+    @SuppressWarnings("unchecked")
+    private String callOpenRouterModel(String model, String key, String prompt) {
         try {
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
             messages.add(Map.of("role", "user", "content", prompt));
 
             Map<String, Object> requestBody = new LinkedHashMap<>();
-            requestBody.put("model", QWEN_MODEL);
+            requestBody.put("model", model);
             requestBody.put("messages", messages);
             requestBody.put("temperature", 0.7);
             requestBody.put("max_tokens", MAX_RESPONSE_TOKENS);
@@ -339,18 +364,55 @@ public class GeminiService {
             List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
             String content = (String) message.get("content");
-
-            // Qwen3 may include <think>...</think> reasoning blocks — strip them
-            if (content != null && content.contains("<think>")) {
-                content = content.replaceAll("(?s)<think>.*?</think>", "").trim();
-            }
-
-            return content;
+            return cleanAiText(content);
         } catch (Exception e) {
-            lastQwenError = e.getClass().getSimpleName() + ": " + e.getMessage();
-            System.out.println("[WanderTribe] Qwen/OpenRouter failed: " + lastQwenError);
+            lastQwenError = model + " -> " + e.getClass().getSimpleName() + ": " + e.getMessage();
+            System.out.println("[WanderTribe] OpenRouter " + model + " failed: " + e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * Strips model "thinking" / reasoning leakage so users only ever see the
+     * final answer. Removes &lt;think&gt; blocks and any meta-commentary preamble
+     * that appears before the first markdown heading.
+     */
+    private String cleanAiText(String content) {
+        if (content == null) return null;
+        String c = content;
+
+        // Remove explicit reasoning blocks used by some models.
+        c = c.replaceAll("(?s)<think>.*?</think>", "");
+        c = c.replaceAll("(?s)<reasoning>.*?</reasoning>", "");
+        c = c.replaceAll("(?is)<\\|channel\\|>analysis.*?<\\|message\\|>", "");
+        c = c.trim();
+
+        // If the model leaked planning text before the real answer, cut to the
+        // first markdown heading when a reasoning phrase precedes it.
+        int headingIdx = firstHeadingIndex(c);
+        if (headingIdx > 0) {
+            String preamble = c.substring(0, headingIdx).toLowerCase();
+            String[] leaks = {"we need to", "we must", "let me", "i need to", "the user wants",
+                    "we should", "we can ", "first,", "okay,", "let's ", "i'll ", "i will ",
+                    "to produce", "we'll ", "analysis"};
+            for (String l : leaks) {
+                if (preamble.contains(l)) {
+                    c = c.substring(headingIdx).trim();
+                    break;
+                }
+            }
+        }
+        return c.trim();
+    }
+
+    private int firstHeadingIndex(String c) {
+        int best = -1;
+        for (String marker : new String[]{"\n# ", "\n## ", "\n### "}) {
+            int i = c.indexOf(marker);
+            if (i >= 0 && (best == -1 || i < best)) best = i + 1;
+        }
+        if (c.startsWith("# ") || c.startsWith("## ") || c.startsWith("### ")) return 0;
+        return best;
     }
 
     @SuppressWarnings("unchecked")
@@ -375,7 +437,7 @@ public class GeminiService {
             List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
             Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
             List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
-            return (String) parts.get(0).get("text");
+            return cleanAiText((String) parts.get(0).get("text"));
         } catch (Exception e) {
             lastGeminiError = e.getClass().getSimpleName() + ": " + e.getMessage();
             System.out.println("[WanderTribe] Gemini failed: " + lastGeminiError);
@@ -411,7 +473,7 @@ public class GeminiService {
 
             List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
             Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            return (String) message.get("content");
+            return cleanAiText((String) message.get("content"));
         } catch (Exception e) {
             lastGroqError = e.getClass().getSimpleName() + ": " + e.getMessage();
             System.out.println("[WanderTribe] Groq failed: " + lastGroqError);
