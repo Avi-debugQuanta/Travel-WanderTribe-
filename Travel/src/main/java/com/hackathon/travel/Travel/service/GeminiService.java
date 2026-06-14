@@ -7,526 +7,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.http.MediaType;
 import org.springframework.core.ParameterizedTypeReference;
-import com.hackathon.travel.Travel.models.Place;
-import com.hackathon.travel.Travel.models.TrekInfo;
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import com.hackathon.travel.Travel.models.ai.ItineraryResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.stream.Collectors;
 
 @Service
 public class GeminiService {
 
     private final RestClient restClient;
-    private final DestinationKnowledgeBase knowledgeBase;
-    private final RetrievalService retrievalService;
-    private final RoutePlannerService routePlannerService;
-    private final RouteDatasetLoader routeDataset;
 
-    @Value("${gemini.api.key:}")
-    private String geminiApiKey;
+    @Value("${python.service.url:http://localhost:8000}")
+    private String pythonServiceUrl;
 
-    @Value("${groq.api.key:}")
-    private String groqApiKey;
-
-    @Value("${openrouter.api.key:}")
-    private String openRouterApiKey;
-
-    private static final String GEMINI_FALLBACK_P1 = "AIzaSyD4DBv28V";
-    private static final String GEMINI_FALLBACK_P2 = "Dq3Y8BjUnDLE6jhS1WVC2zXzw";
-    private static final String GROQ_FALLBACK_P1 = "gsk_G0jFqT0rx4lyIF2Rl2GH";
-    private static final String GROQ_FALLBACK_P2 = "WGdyb3FYg8vSS7OF1pls2koxwpPg8Epb";
-    private static final String OR_FALLBACK_P1 = "sk-or-v1-a0e7fc5c469dbe13";
-    private static final String OR_FALLBACK_P2 = "7a3d4130a5e00198ecb1fac85151fad224c1ad479940c960";
-
-    private String getGeminiKey() {
-        return (geminiApiKey != null && !geminiApiKey.isBlank()) ? geminiApiKey : GEMINI_FALLBACK_P1 + GEMINI_FALLBACK_P2;
-    }
-
-    private String getGroqKey() {
-        return (groqApiKey != null && !groqApiKey.isBlank()) ? groqApiKey : GROQ_FALLBACK_P1 + GROQ_FALLBACK_P2;
-    }
-
-    private String getOpenRouterKey() {
-        return (openRouterApiKey != null && !openRouterApiKey.isBlank()) ? openRouterApiKey : OR_FALLBACK_P1 + OR_FALLBACK_P2;
-    }
-
-    private static final String GEMINI_URL =
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
-
-    private static final String GROQ_URL =
-        "https://api.groq.com/openai/v1/chat/completions";
-
-    private static final String OPENROUTER_URL =
-        "https://openrouter.ai/api/v1/chat/completions";
-
-    private static final String GROQ_MODEL = "llama-3.3-70b-versatile";
-
-    // Free OpenRouter models tried in order. gpt-oss-120b is an instruct model
-    // that returns clean markdown with no reasoning leak; the rest are fallbacks
-    // for when the primary is rate-limited (HTTP 429).
-    private static final String[] OPENROUTER_MODELS = {
-        "openai/gpt-oss-120b:free",
-        "meta-llama/llama-3.3-70b-instruct:free",
-        "qwen/qwen3-next-80b-a3b-instruct:free"
-    };
-
-    private static final int MAX_PROMPT_CHARS = 7000;
-    private static final int MAX_RESPONSE_TOKENS = 1600;
-
-    private static final String SYSTEM_PROMPT =
-        "You are WanderTribe AI — the world's most detailed Indian road-trip planner. " +
-        "You know every highway, dhaba, scenic viewpoint, Google-reviewed hotel, km marker, " +
-        "local guide, and hidden gem on Indian routes. " +
-        "ALWAYS include: real place names, Google ratings (X.X★, N reviews), prices in ₹, " +
-        "distances in km, drive times, risk/adventure levels (🟢Safe 🟡Moderate 🔴Risky), " +
-        "restaurant phone numbers for reservation (format: 📞+91-XXXXX-XXXXX), " +
-        "hotel booking links (MakeMyTrip/Goibibo), and local guide recommendations. " +
-        "Format in rich markdown with emojis for visual appeal. " +
-        "CRITICAL: Output ONLY the final answer. Do NOT show your reasoning, planning, " +
-        "thoughts, or any meta commentary like 'We need to' or 'Let me'. " +
-        "Begin directly with the content (a markdown heading).";
-
-    private static final String CHAT_SYSTEM_PROMPT =
-        "You are WanderTribe AI, a profoundly intuitive, innovative, and conversational travel companion. " +
-        "You speak like a world-class travel expert mixed with a supportive friend, taking inspiration from the best AI conversationalists (like Claude). " +
-        "Your responses must be incredibly engaging, interactive, and beautifully structured. " +
-        "DO NOT use dry, rigid tables or data dumps unless specifically asked. Instead, use:\n" +
-        "- Engaging storytelling, evocative descriptions, and warm, inspiring language.\n" +
-        "- Beautiful, modern markdown formatting (e.g., emojis, blockquotes for tips, bolded highlights, and clean bulleted lists).\n" +
-        "- Thought-provoking questions at the end to keep the user excited and talking.\n" +
-        "Weave your deep knowledge of Indian routes, hidden gems, and local culture seamlessly into the conversation. " +
-        "Present recommendations as curated, vivid experiences rather than cold statistics.\n" +
-        "CRITICAL: Output ONLY the final response. Do NOT show reasoning or meta-commentary.";
-
-    public GeminiService(DestinationKnowledgeBase knowledgeBase,
-                         RetrievalService retrievalService,
-                         RoutePlannerService routePlannerService,
-                         RouteDatasetLoader routeDataset) {
+    public GeminiService() {
         this.restClient = RestClient.create();
-        this.knowledgeBase = knowledgeBase;
-        this.retrievalService = retrievalService;
-        this.routePlannerService = routePlannerService;
-        this.routeDataset = routeDataset;
-    }
-
-    public String chat(String userMessage, List<ChatMessage> history, String tripContext) {
-        StringBuilder sb = new StringBuilder(CHAT_SYSTEM_PROMPT);
-        if (tripContext != null && !tripContext.isBlank()) {
-            String trimmedCtx = tripContext.length() > 500 ? tripContext.substring(0, 500) : tripContext;
-            sb.append("\n\n").append(trimmedCtx);
-        }
-        if (history != null && !history.isEmpty()) {
-            int start = Math.max(0, history.size() - 3);
-            sb.append("\n\nRecent:");
-            for (int i = start; i < history.size(); i++) {
-                ChatMessage m = history.get(i);
-                String line = m.getRole().name() + ": " + truncate(m.getContent(), 150);
-                sb.append("\n").append(line);
-            }
-        }
-        sb.append("\n\nUser: ").append(userMessage).append("\nAssistant:");
-        return callAI(truncate(sb.toString(), MAX_PROMPT_CHARS));
-    }
-
-    public ItineraryResponse curateItinerary(String destination, String startDate, String endDate,
-                                   String budget, String travelStyle, List<Idea> ideas,
-                                   String chatSummary) {
-        String ideasText = ideas.stream()
-                .limit(5)
-                .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " upvotes)")
-                .collect(Collectors.joining("\n"));
-
-        int totalDays = computeDays(startDate, endDate);
-        int month = parseMonth(startDate);
-
-        // --- RAG: retrieve grounded places + plan a coherent route ---
-        String groundedContext = buildGroundedContext(destination, travelStyle, ideas, month, totalDays);
-
-        StringBuilder prompt = new StringBuilder(SYSTEM_PROMPT).append("\n\n");
-        prompt.append("ROAD-TRIP ITINERARY for: ").append(destination)
-              .append(" | ").append(startDate).append("→").append(endDate)
-              .append(" | ₹").append(budget).append("/person | Style: ").append(travelStyle)
-              .append(" | ").append(totalDays).append(" days\n");
-        if (!ideasText.isEmpty()) prompt.append("Group ideas: ").append(ideasText).append("\n");
-        if (chatSummary != null && chatSummary.length() > 10) {
-            prompt.append("Notes: ").append(truncate(chatSummary, 200)).append("\n");
-        }
-
-        if (groundedContext != null && !groundedContext.isBlank()) {
-            prompt.append("\n=== VERIFIED ROUTE DATA (use ONLY these towns/stops, distances & ratings — do NOT invent towns or place hotels in the wrong town) ===\n");
-            prompt.append(groundedContext);
-            prompt.append("\nRULES:\n");
-            prompt.append("1. Follow the day-by-day route ABOVE exactly — same towns, same order, same km/hours.\n");
-            prompt.append("2. Never add a town/village that is not in the verified data, and never move a place to a different valley.\n");
-            prompt.append("3. You MAY name real hotels, cafes, dhabas and guides that are physically located IN these verified towns (e.g. a cafe in Old Manali) — keep them realistic with ₹ prices and 📞 phone numbers.\n");
-        }
-
-        prompt.append("\nFor EACH day include:\n")
-              .append("## Day X: [Title]\n")
-              .append("**Route:** A→B→C (use the verified km, hrs & road from above)\n")
-              .append("**Scenic:** ★★★★☆\n")
-              .append("Route stops table: | Km | Stop | Activity | Duration |\n")
-              .append("Hour-by-hour schedule (6AM-10PM) with real restaurant names, ⭐ratings, ₹costs\n")
-              .append("Hotel: name, ⭐rating (reviews), ₹price, 📞phone, booking link\n")
-              .append("Food table: | Meal | Place | Dish | ₹Cost | ⭐ | 📞Phone |\n")
-              .append("Risk table: | Activity | 🟢Safe/🟡Moderate/🔴Risky | Tip |\n")
-              .append("Guide: name, 📞phone, ₹cost/day (if adventure activities)\n")
-              .append("Day budget table\n")
-              .append("3 insider tips\n\n")
-              .append("End with: Total budget table, Packing list, Emergency numbers, Apps needed.\n")
-              .append("MUST OUTPUT IN STRICT JSON ONLY. Ensure keys are in quotes and it is valid JSON.\n")
-              .append("Format required:\n")
-              .append("{\n")
-              .append("  \"days\": [\n")
-              .append("    {\n")
-              .append("      \"day\": 1,\n")
-              .append("      \"title\": \"Title\",\n")
-              .append("      \"route\": \"A -> B\",\n")
-              .append("      \"scenicRating\": \"★★★★☆\",\n")
-              .append("      \"stops\": [\"Km 10: Stop 1 - Activity (1 hr)\"],\n")
-              .append("      \"schedule\": [\"08:00 AM - Breakfast at X (₹200) ⭐4.5 📞+91-XXXXX\"],\n")
-              .append("      \"hotel\": \"Hotel Name ⭐4.5 ₹2000 📞+91-XXXXX\",\n")
-              .append("      \"food\": [\"Lunch at Y - Dish (₹300) ⭐4\"],\n")
-              .append("      \"risks\": [\"Activity - 🟢Safe - Tip\"],\n")
-              .append("      \"guide\": \"Name 📞+91-XXXXX ₹1000/day\",\n")
-              .append("      \"budget\": \"₹3000 total\",\n")
-              .append("      \"tips\": [\"Tip 1\", \"Tip 2\", \"Tip 3\"]\n")
-              .append("    }\n")
-              .append("  ],\n")
-              .append("  \"tips\": [\"Global Tip 1\"],\n")
-              .append("  \"packingList\": [\"Item 1\", \"Item 2\"]\n")
-              .append("}");
-
-        String responseJson = callAI(truncate(prompt.toString(), MAX_PROMPT_CHARS));
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(responseJson, ItineraryResponse.class);
-        } catch (Exception e) {
-            System.err.println("JSON Parsing failed! Raw response: " + responseJson);
-            e.printStackTrace();
-            ItineraryResponse fallback = new ItineraryResponse();
-            fallback.setTips(List.of("Error parsing AI response: " + e.getMessage()));
-            return fallback;
-        }
-    }
-
-    /**
-     * Builds the grounded "facts block" the LLM must adhere to: a verified,
-     * geographically ordered day-by-day route with real distances, ratings and
-     * seasonal notes pulled from our route-graph knowledge base.
-     */
-    private String buildGroundedContext(String destination, String travelStyle,
-                                        List<Idea> ideas, int month, int totalDays) {
-        try {
-            int maxPlaces = Math.max(6, Math.min(16, totalDays * 3));
-            RetrievalService.RetrievalResult retrieval =
-                    retrievalService.retrievePlaces(destination, travelStyle, ideas, month, maxPlaces);
-            if (retrieval == null || retrieval.isEmpty()) {
-                return null; // unknown region — let the model free-form (other regions not yet in dataset)
-            }
-
-            List<RoutePlannerService.DayPlan> days =
-                    routePlannerService.plan(retrieval.places, retrieval.entryHubId,
-                            Math.max(1, totalDays), travelStyle);
-            if (days.isEmpty()) return null;
-
-            StringBuilder sb = new StringBuilder();
-            for (RoutePlannerService.DayPlan day : days) {
-                sb.append("Day ").append(day.day).append(": ");
-                List<String> names = new ArrayList<>();
-                for (Place p : day.places) names.add(p.getName());
-                sb.append(String.join(" → ", names));
-                if (day.driveKm > 0) {
-                    sb.append("  [").append(fmt(day.driveKm)).append(" km, ")
-                      .append(fmt(day.driveHours)).append(" hrs drive]");
-                }
-                sb.append("\n");
-
-                for (RoutePlannerService.Leg leg : day.legs) {
-                    sb.append("   • ").append(leg.from.getName()).append("→").append(leg.to.getName())
-                      .append(": ").append(fmt(leg.km)).append(" km, ").append(fmt(leg.hours)).append(" hrs, ")
-                      .append(leg.mode).append(", risk ").append(riskEmoji(leg.risk));
-                    if (leg.viaNames != null && !leg.viaNames.isEmpty()) {
-                        sb.append(" via ").append(String.join(", ", leg.viaNames));
-                    }
-                    sb.append("\n");
-                }
-                for (Place p : day.places) {
-                    sb.append("   - ").append(p.getName())
-                      .append(" (").append(p.getType()).append(", ").append(p.getAltitude_m()).append("m, ⭐")
-                      .append(p.getRating()).append("/").append(p.getReviewCount()).append(" reviews): ")
-                      .append(p.getReviewSnippet());
-                    if (p.getTags() != null && !p.getTags().isEmpty()) {
-                        sb.append(" [").append(String.join(", ", p.getTags())).append("]");
-                    }
-                    sb.append("\n");
-                }
-            }
-
-            // Relevant treks across the chosen places.
-            List<String> placeIds = new ArrayList<>();
-            for (RoutePlannerService.DayPlan d : days)
-                for (Place p : d.places) placeIds.add(p.getId());
-            List<TrekInfo> treks = routeDataset.getTreksForPlaces(placeIds);
-            if (!treks.isEmpty()) {
-                sb.append("\nTreks available on this route:\n");
-                for (TrekInfo t : treks) {
-                    sb.append("   - ").append(t.getName()).append(" (").append(t.getDifficulty())
-                      .append(", ").append(t.getDays()).append("d, ").append(t.getAltitude_m()).append("m")
-                      .append(t.isPermit_required() ? ", PERMIT required" : "")
-                      .append(t.isGuide_recommended() ? ", guide recommended" : "")
-                      .append("): ").append(t.getHighlights()).append("\n");
-                }
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            System.out.println("[WanderTribe] Grounded context failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private String fmt(double v) {
-        if (v == Math.floor(v)) return String.valueOf((long) v);
-        return String.valueOf(Math.round(v * 10.0) / 10.0);
-    }
-
-    private String riskEmoji(String risk) {
-        if (risk == null) return "🟢";
-        switch (risk.toLowerCase()) {
-            case "red": return "🔴";
-            case "amber": return "🟡";
-            default: return "🟢";
-        }
-    }
-
-    private int computeDays(String startDate, String endDate) {
-        try {
-            LocalDate s = LocalDate.parse(startDate.substring(0, 10));
-            LocalDate e = LocalDate.parse(endDate.substring(0, 10));
-            long d = ChronoUnit.DAYS.between(s, e) + 1;
-            if (d < 1) return 1;
-            if (d > 15) return 15;
-            return (int) d;
-        } catch (Exception ex) {
-            return 4;
-        }
-    }
-
-    private int parseMonth(String date) {
-        try {
-            return LocalDate.parse(date.substring(0, 10)).getMonthValue();
-        } catch (Exception ex) {
-            return 0;
-        }
-    }
-
-    public String getSeasonRecommendation(String destination) {
-        String prompt = SYSTEM_PROMPT + "\n\nCreate a DETAILED month-by-month travel guide for " + destination + ":\n" +
-                "For EACH month include:\n" +
-                "- Temperature range & weather\n" +
-                "- Road conditions (🟢Open 🟡Risky 🔴Closed)\n" +
-                "- Crowd level (1-5)\n" +
-                "- Festivals/Events happening\n" +
-                "- Best activities for that month\n" +
-                "- Risk level for travel\n\n" +
-                "End with:\n## 🏆 TOP RECOMMENDATION\n[Best month with reasons]\n\n" +
-                "## ❌ AVOID\n[Worst months with reasons]\n\nUse tables and rich markdown.";
-        return callAI(prompt);
-    }
-
-    private String lastQwenError = "";
-    private String lastGroqError = "";
-    private String lastGeminiError = "";
-
-    private String callAI(String prompt) {
-        lastQwenError = "";
-        lastGroqError = "";
-        lastGeminiError = "";
-
-        // Priority: Groq -> Gemini -> Qwen
-        String groqResult = callGroq(prompt);
-        if (groqResult != null) return groqResult;
-
-        String geminiResult = callGemini(prompt);
-        if (geminiResult != null) return geminiResult;
-
-        String qwenResult = callQwen(prompt);
-        if (qwenResult != null) return qwenResult;
-
-        return "AI is temporarily unavailable. Please try again.\n\n" +
-               "**Debug info:**\n" +
-               "- Qwen: " + (lastQwenError.isEmpty() ? "no key" : lastQwenError) + "\n" +
-               "- Groq: " + (lastGroqError.isEmpty() ? "no key" : lastGroqError) + "\n" +
-               "- Gemini: " + (lastGeminiError.isEmpty() ? "no key" : lastGeminiError);
-    }
-
-    private String callQwen(String prompt) {
-        String key = getOpenRouterKey();
-        if (key.isBlank()) {
-            lastQwenError = "no key";
-            return null;
-        }
-        // Try each free model in turn; skip ones that are rate-limited (429).
-        for (String model : OPENROUTER_MODELS) {
-            String result = callOpenRouterModel(model, key, prompt);
-            if (result != null && !result.isBlank()) {
-                System.out.println("[WanderTribe] OpenRouter served by: " + model);
-                return result;
-            }
-        }
-        return null;
-    }
-
-    @SuppressWarnings("unchecked")
-    private String callOpenRouterModel(String model, String key, String prompt) {
-        try {
-            List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", SYSTEM_PROMPT));
-            messages.add(Map.of("role", "user", "content", prompt));
-
-            Map<String, Object> requestBody = new LinkedHashMap<>();
-            requestBody.put("model", model);
-            requestBody.put("messages", messages);
-            requestBody.put("temperature", 0.7);
-            requestBody.put("max_tokens", MAX_RESPONSE_TOKENS);
-
-            Map<String, Object> response = restClient.post()
-                    .uri(OPENROUTER_URL)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + key)
-                    .header("HTTP-Referer", "https://wandertribe.app")
-                    .header("X-Title", "WanderTribe")
-                    .body(requestBody)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
-
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            String content = (String) message.get("content");
-            return cleanAiText(content);
-        } catch (Exception e) {
-            lastQwenError = model + " -> " + e.getClass().getSimpleName() + ": " + e.getMessage();
-            System.out.println("[WanderTribe] OpenRouter " + model + " failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Strips model "thinking" / reasoning leakage so users only ever see the
-     * final answer. Removes &lt;think&gt; blocks and any meta-commentary preamble
-     * that appears before the first markdown heading.
-     */
-    private String cleanAiText(String content) {
-        if (content == null) return null;
-        String c = content;
-
-        // Remove explicit reasoning blocks used by some models.
-        c = c.replaceAll("(?s)<think>.*?</think>", "");
-        c = c.replaceAll("(?s)<reasoning>.*?</reasoning>", "");
-        c = c.replaceAll("(?is)<\\|channel\\|>analysis.*?<\\|message\\|>", "");
-
-        // Strip markdown json fences
-        c = c.replaceAll("```json", "");
-        c = c.replaceAll("```", "");
-        
-        c = c.trim();
-        
-        // Find first '{' to drop any prefix text
-        int startObj = c.indexOf('{');
-        if (startObj > 0) {
-            c = c.substring(startObj);
-        }
-        
-        // Find last '}'
-        int endObj = c.lastIndexOf('}');
-        if (endObj > 0) {
-            c = c.substring(0, endObj + 1);
-        }
-
-        return c.trim();
-
-    }
-
-    private int firstHeadingIndex(String c) {
-        int best = -1;
-        for (String marker : new String[]{"\n# ", "\n## ", "\n### "}) {
-            int i = c.indexOf(marker);
-            if (i >= 0 && (best == -1 || i < best)) best = i + 1;
-        }
-        if (c.startsWith("# ") || c.startsWith("## ") || c.startsWith("### ")) return 0;
-        return best;
-    }
-
-    @SuppressWarnings("unchecked")
-    private String callGemini(String prompt) {
-        String key = getGeminiKey();
-        if (key == null || key.isBlank()) return null;
-
-        try {
-            Map<String, Object> requestBody = Map.of(
-                "contents", List.of(
-                    Map.of("parts", List.of(Map.of("text", prompt)))
-                )
-            );
-
-            Map<String, Object> response = restClient.post()
-                    .uri(GEMINI_URL + "?key=" + key)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(requestBody)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
-
-            List<Map<String, Object>> candidates = (List<Map<String, Object>>) response.get("candidates");
-            Map<String, Object> content = (Map<String, Object>) candidates.get(0).get("content");
-            List<Map<String, Object>> parts = (List<Map<String, Object>>) content.get("parts");
-            return cleanAiText((String) parts.get(0).get("text"));
-        } catch (Exception e) {
-            lastGeminiError = e.getClass().getSimpleName() + ": " + e.getMessage();
-            System.out.println("[WanderTribe] Gemini failed: " + lastGeminiError);
-            return null;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private String callGroq(String prompt) {
-        String key = getGroqKey();
-        if (key == null || key.isBlank()) {
-            lastGroqError = "no key";
-            return null;
-        }
-
-        try {
-            List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "user", "content", prompt));
-
-            Map<String, Object> requestBody = new LinkedHashMap<>();
-            requestBody.put("model", GROQ_MODEL);
-            requestBody.put("messages", messages);
-            requestBody.put("temperature", 0.7);
-            requestBody.put("max_tokens", MAX_RESPONSE_TOKENS);
-
-            Map<String, Object> response = restClient.post()
-                    .uri(GROQ_URL)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + key)
-                    .body(requestBody)
-                    .retrieve()
-                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
-
-            List<Map<String, Object>> choices = (List<Map<String, Object>>) response.get("choices");
-            Map<String, Object> message = (Map<String, Object>) choices.get(0).get("message");
-            return cleanAiText((String) message.get("content"));
-        } catch (Exception e) {
-            lastGroqError = e.getClass().getSimpleName() + ": " + e.getMessage();
-            System.out.println("[WanderTribe] Groq failed: " + lastGroqError);
-            return null;
-        }
     }
 
     private String extractDestination(String tripContext) {
@@ -539,52 +38,114 @@ public class GeminiService {
         return "";
     }
 
-    private static String truncate(String s, int maxLen) {
-        return (s != null && s.length() > maxLen) ? s.substring(0, maxLen) : s;
+    public String chat(String userMessage, List<ChatMessage> history, String tripContext) {
+        try {
+            Map<String, Object> requestBody = new LinkedHashMap<>();
+            requestBody.put("prompt", userMessage);
+            
+            List<Map<String, String>> historyList = new ArrayList<>();
+            if (history != null) {
+                for (ChatMessage msg : history) {
+                    historyList.add(Map.of("role", msg.getRole().name(), "content", msg.getContent()));
+                }
+            }
+            requestBody.put("history", historyList);
+            
+            Map<String, String> contextMap = new HashMap<>();
+            if (tripContext != null) {
+                contextMap.put("destination", extractDestination(tripContext));
+                contextMap.put("fullContext", tripContext);
+            }
+            requestBody.put("tripContext", contextMap);
+
+            Map<String, Object> response = restClient.post()
+                    .uri(pythonServiceUrl + "/ai/chat")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+                    
+            return (String) response.get("response");
+        } catch (Exception e) {
+            return "AI Service Error: " + e.getMessage();
+        }
+    }
+
+    public ItineraryResponse curateItinerary(String destination, String startDate, String endDate,
+                                   String budget, String travelStyle, List<Idea> ideas,
+                                   String chatSummary) {
+        String ideasText = ideas.stream()
+                .limit(5)
+                .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " upvotes)")
+                .collect(Collectors.joining("\n"));
+
+        try {
+            Map<String, Object> requestBody = new LinkedHashMap<>();
+            requestBody.put("destination", destination);
+            requestBody.put("startDate", startDate);
+            requestBody.put("endDate", endDate);
+            requestBody.put("budget", budget);
+            requestBody.put("travelStyle", travelStyle);
+            requestBody.put("ideas", ideasText);
+            requestBody.put("chatSummary", chatSummary != null ? chatSummary : "");
+
+            Map<String, Object> response = restClient.post()
+                    .uri(pythonServiceUrl + "/ai/curate")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+                    
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.convertValue(response, ItineraryResponse.class);
+        } catch (Exception e) {
+            ItineraryResponse fallback = new ItineraryResponse();
+            fallback.setTips(List.of("Error calling AI Service: " + e.getMessage()));
+            return fallback;
+        }
+    }
+
+    public String getSeasonRecommendation(String destination) {
+        try {
+            Map<String, Object> requestBody = Map.of("destination", destination);
+            Map<String, Object> response = restClient.post()
+                    .uri(pythonServiceUrl + "/ai/season")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(requestBody)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<Map<String, Object>>() {});
+                    
+            return (String) response.get("response");
+        } catch (Exception e) {
+            return "AI Service Error: " + e.getMessage();
+        }
     }
 
     public void streamChat(String userMessage, List<ChatMessage> history, String tripContext, java.util.function.Consumer<String> onToken, Runnable onComplete, java.util.function.Consumer<String> onError) {
-        StringBuilder sb = new StringBuilder(CHAT_SYSTEM_PROMPT);
-        if (tripContext != null && !tripContext.isBlank()) {
-            String trimmedCtx = tripContext.length() > 500 ? tripContext.substring(0, 500) : tripContext;
-            sb.append("\n\n").append(trimmedCtx);
-        }
-        if (history != null && !history.isEmpty()) {
-            int start = Math.max(0, history.size() - 3);
-            sb.append("\n\nRecent:");
-            for (int i = start; i < history.size(); i++) {
-                ChatMessage m = history.get(i);
-                String line = m.getRole().name() + ": " + truncate(m.getContent(), 150);
-                sb.append("\n").append(line);
-            }
-        }
-        sb.append("\n\nUser: ").append(userMessage).append("\nAssistant:");
-        String prompt = truncate(sb.toString(), MAX_PROMPT_CHARS);
-
-        String key = getGroqKey();
-        if (key == null || key.isBlank()) {
-            onError.accept("No valid Groq API key found.");
-            return;
-        }
-
         try {
-            List<Map<String, String>> messages = new ArrayList<>();
-            messages.add(Map.of("role", "system", "content", CHAT_SYSTEM_PROMPT));
-            messages.add(Map.of("role", "user", "content", prompt));
-
             Map<String, Object> requestBody = new LinkedHashMap<>();
-            requestBody.put("model", GROQ_MODEL);
-            requestBody.put("messages", messages);
-            requestBody.put("temperature", 0.7);
-            requestBody.put("max_tokens", MAX_RESPONSE_TOKENS);
-            requestBody.put("stream", true);
+            requestBody.put("prompt", userMessage);
+            
+            List<Map<String, String>> historyList = new ArrayList<>();
+            if (history != null) {
+                for (ChatMessage msg : history) {
+                    historyList.add(Map.of("role", msg.getRole().name(), "content", msg.getContent()));
+                }
+            }
+            requestBody.put("history", historyList);
+            
+            Map<String, String> contextMap = new HashMap<>();
+            if (tripContext != null) {
+                contextMap.put("destination", extractDestination(tripContext));
+                contextMap.put("fullContext", tripContext);
+            }
+            requestBody.put("tripContext", contextMap);
 
             com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
             String jsonBody = mapper.writeValueAsString(requestBody);
 
             java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(GROQ_URL))
-                    .header("Authorization", "Bearer " + key)
+                    .uri(java.net.URI.create(pythonServiceUrl + "/ai/chat/stream"))
                     .header("Content-Type", "application/json")
                     .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonBody))
                     .build();
@@ -600,15 +161,13 @@ public class GeminiService {
                                 }
                                 try {
                                     com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(data);
-                                    com.fasterxml.jackson.databind.JsonNode choices = node.get("choices");
-                                    if (choices != null && choices.isArray() && choices.size() > 0) {
-                                        com.fasterxml.jackson.databind.JsonNode delta = choices.get(0).get("delta");
-                                        if (delta != null && delta.has("content")) {
-                                            String content = delta.get("content").asText();
-                                            if (content != null && !content.isEmpty()) {
-                                                onToken.accept(content);
-                                            }
+                                    if (node.has("text")) {
+                                        String content = node.get("text").asText();
+                                        if (content != null && !content.isEmpty()) {
+                                            onToken.accept(content);
                                         }
+                                    } else if (node.has("error")) {
+                                        onError.accept("Python Service Error: " + node.get("error").asText());
                                     }
                                 } catch (Exception e) {
                                     // Ignore parse errors on partial streams
