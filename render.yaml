@@ -1,12 +1,23 @@
 services:
   - type: web
-    name: wandertribe
+    name: wandertribe-java
     env: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    branch: master
+    branch: main
     envVars:
-      - key: GEMINI_API_KEY
-        value: AIzaSyD4DBv28VDq3Y8BjUnDLE6jhS1WVC2zXzw
+      - key: PYTHON_SERVICE_URL
+        fromService:
+          type: web
+          name: travel-intelligence
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: travel-intelligence
+    env: docker
+    plan: free
+    dockerfilePath: ./travel-intelligence/Dockerfile
+    branch: main
+    envVars:
       - key: GROQ_API_KEY
-        value: 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
+        value: "PLEASE_SET_IN_RENDER_DASHBOARD"
