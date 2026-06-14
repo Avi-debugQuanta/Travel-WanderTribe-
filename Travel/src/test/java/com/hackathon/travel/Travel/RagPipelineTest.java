@@ -22,7 +22,8 @@ class RagPipelineTest {
     static void setup() {
         loader = new RouteDatasetLoader();
         loader.load();
-        retrieval = new RetrievalService(loader);
+        com.hackathon.travel.Travel.service.EmbeddingService embeddingService = new com.hackathon.travel.Travel.service.EmbeddingService();
+        retrieval = new RetrievalService(loader, embeddingService);
         planner = new RoutePlannerService(loader);
     }
 
