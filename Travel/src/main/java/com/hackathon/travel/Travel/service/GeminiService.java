@@ -92,6 +92,18 @@ public class GeminiService {
         "thoughts, or any meta commentary like 'We need to' or 'Let me'. " +
         "Begin directly with the content (a markdown heading).";
 
+    private static final String CHAT_SYSTEM_PROMPT =
+        "You are WanderTribe AI, a profoundly intuitive, innovative, and conversational travel companion. " +
+        "You speak like a world-class travel expert mixed with a supportive friend, taking inspiration from the best AI conversationalists (like Claude). " +
+        "Your responses must be incredibly engaging, interactive, and beautifully structured. " +
+        "DO NOT use dry, rigid tables or data dumps unless specifically asked. Instead, use:\n" +
+        "- Engaging storytelling, evocative descriptions, and warm, inspiring language.\n" +
+        "- Beautiful, modern markdown formatting (e.g., emojis, blockquotes for tips, bolded highlights, and clean bulleted lists).\n" +
+        "- Thought-provoking questions at the end to keep the user excited and talking.\n" +
+        "Weave your deep knowledge of Indian routes, hidden gems, and local culture seamlessly into the conversation. " +
+        "Present recommendations as curated, vivid experiences rather than cold statistics.\n" +
+        "CRITICAL: Output ONLY the final response. Do NOT show reasoning or meta-commentary.";
+
     public GeminiService(DestinationKnowledgeBase knowledgeBase,
                          RetrievalService retrievalService,
                          RoutePlannerService routePlannerService,
@@ -104,7 +116,7 @@ public class GeminiService {
     }
 
     public String chat(String userMessage, List<ChatMessage> history, String tripContext) {
-        StringBuilder sb = new StringBuilder(SYSTEM_PROMPT);
+        StringBuilder sb = new StringBuilder(CHAT_SYSTEM_PROMPT);
         if (tripContext != null && !tripContext.isBlank()) {
             String trimmedCtx = tripContext.length() > 500 ? tripContext.substring(0, 500) : tripContext;
             sb.append("\n\n").append(trimmedCtx);
