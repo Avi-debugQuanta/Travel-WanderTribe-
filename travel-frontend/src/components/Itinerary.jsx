@@ -27,44 +27,45 @@ const DAY_IMAGES = {
   default: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
 };
 
-function parseDays(markdown) {
-  if (!markdown) return [];
-  const lines = markdown.split('\n');
-  const days = [];
-  let current = null;
+function parseDays(itineraryObj) {
+  if (!itineraryObj || !itineraryObj.days) return [];
+  
+  return itineraryObj.days.map(d => {
+    const content = `
+${d.route ? `**Route:** ${d.route}` : ''}
 
-  for (const line of lines) {
-    const dayMatch = line.match(/^#{1,3}\s*(?:Day\s*(\d+)|(\d+)\.\s*Day)/i);
-    if (dayMatch) {
-      if (current) days.push(current);
-      const dayNum = dayMatch[1] || dayMatch[2] || days.length + 1;
-      const title = line.replace(/^#{1,3}\s*/, '').trim();
-      current = { dayNum: parseInt(dayNum), title, content: '', route: '', totalKm: '', scenic: '', routeStops: [] };
-    } else if (current) {
-      current.content += line + '\n';
+### 🕰️ Schedule
+${(d.schedule || []).map(s => `- ${s}`).join('\n')}
 
-      const routeMatch = line.match(/\*\*🗺️?\s*Route[:\*]*\*?\*?\s*(.*)/i);
-      if (routeMatch) current.route = routeMatch[1].replace(/\*\*/g, '').trim();
+### 🏨 Hotel & Stay
+${d.hotel}
 
-      const totalMatch = line.match(/\*\*📏?\s*Total[:\*]*\*?\*?\s*(.*)/i);
-      if (totalMatch) current.totalKm = totalMatch[1].replace(/\*\*/g, '').trim();
+### 🍽️ Food & Dining
+${(d.food || []).map(f => `- ${f}`).join('\n')}
 
-      const scenicMatch = line.match(/Scenic\s*(?:Rating)?[:\s]*([★⭐☆]+)/i);
-      if (scenicMatch) current.scenic = scenicMatch[1];
+### ⚠️ Risks & Tips
+${(d.risks || []).map(r => `- ${r}`).join('\n')}
 
-      const kmMatch = line.match(/\|\s*(\d+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]+)\s*\|/);
-      if (kmMatch && !line.includes('Km') && !line.includes('---')) {
-        current.routeStops.push({
-          km: kmMatch[1],
-          stop: kmMatch[2].trim(),
-          activity: kmMatch[3].trim(),
-          duration: kmMatch[4].trim()
-        });
-      }
-    }
-  }
-  if (current) days.push(current);
-  return days;
+${d.guide ? `**Guide/Expert:** ${d.guide}` : ''}
+${d.budget ? `**Day Budget:** ${d.budget}` : ''}
+
+### 💡 Insider Tips
+${(d.tips || []).map(t => `- ${t}`).join('\n')}
+    `;
+
+    const routeStops = (d.stops || []).map(s => {
+      return { km: '-', stop: s, activity: '', duration: '-' };
+    });
+
+    return {
+      dayNum: d.day || 1,
+      title: d.title || `Day ${d.day}`,
+      content: content,
+      routeStops: routeStops,
+      totalKm: d.route || '',
+      scenic: d.scenicRating || '★★★★☆'
+    };
+  });
 }
 
 function getImgForDay(title) {
@@ -411,7 +412,7 @@ function generatePDF(itinerary, days, tripIdeas) {
 }
 
 export default function Itinerary({ tripId }) {
-  const [itinerary, setItinerary] = useState('');
+  const [itinerary, setItinerary] = useState(null);
   const [seasonInfo, setSeasonInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeDay, setActiveDay] = useState(null);

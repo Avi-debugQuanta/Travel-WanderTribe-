@@ -174,8 +174,15 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
     ['FOOD_STALL', '🍜 Food Stalls'], ['PROPOSALS', '📋 Proposals'],
   ];
 
-  const items = tab === 'HOTEL' ? MOCK_HOTELS : tab === 'CAB' ? MOCK_CABS :
+  const allItems = tab === 'HOTEL' ? MOCK_HOTELS : tab === 'CAB' ? MOCK_CABS :
     tab === 'DRIVER' ? MOCK_DRIVERS : tab === 'FOOD_STALL' ? MOCK_FOOD_STALLS : [];
+
+  const items = allItems.filter(item => {
+    if (!trip?.destination || !item.location) return true;
+    const dest = trip.destination.toLowerCase();
+    const loc = item.location.toLowerCase();
+    return dest.includes(loc) || loc.includes(dest);
+  });
 
   const pendingProposals = proposals.filter(p => p.status === 'PENDING');
   const approvedProposals = proposals.filter(p => p.status === 'APPROVED');

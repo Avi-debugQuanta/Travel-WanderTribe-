@@ -1,6 +1,7 @@
 package com.hackathon.travel.Travel.controller;
 
 import com.hackathon.travel.Travel.models.*;
+import com.hackathon.travel.Travel.models.ai.ItineraryResponse;
 import com.hackathon.travel.Travel.Repository.*;
 import com.hackathon.travel.Travel.service.GeminiService;
 import org.springframework.http.ResponseEntity;
@@ -123,7 +124,7 @@ public class ChatController {
             }
         }
 
-        ctx.append("\nUse this trip info to give specific, relevant suggestions. ");
+        ctx.append("\nUse this info to give specific, relevant suggestions. ");
         ctx.append("Do NOT ask the user to provide destination, dates, or budget — you already have them.");
         return ctx.toString();
     }
@@ -150,7 +151,7 @@ public class ChatController {
     }
 
     @PostMapping("/curate")
-    public ResponseEntity<Map<String, String>> curateItinerary(@PathVariable Long tripId) {
+    public ResponseEntity<Map<String, Object>> curateItinerary(@PathVariable Long tripId) {
         Trip trip = tripRepository.findById(tripId).orElse(null);
         if (trip == null) return ResponseEntity.notFound().build();
 
@@ -165,7 +166,7 @@ public class ChatController {
 
         String bookingsContext = buildBookingsContext(approvedProposals, confirmedBookings);
 
-        String itinerary = geminiService.curateItinerary(
+        ItineraryResponse itinerary = geminiService.curateItinerary(
                 trip.getDestination(),
                 trip.getStartDate(),
                 trip.getEndDate(),

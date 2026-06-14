@@ -15,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import com.hackathon.travel.Travel.models.ai.ItineraryResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.stream.Collectors;
 
 @Service
@@ -63,7 +65,7 @@ public class GeminiService {
     private static final String OPENROUTER_URL =
         "https://openrouter.ai/api/v1/chat/completions";
 
-    private static final String GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct";
+    private static final String GROQ_MODEL = "llama-3.3-70b-versatile";
 
     // Free OpenRouter models tried in order. gpt-oss-120b is an instruct model
     // that returns clean markdown with no reasoning leak; the rest are fallbacks
@@ -120,7 +122,7 @@ public class GeminiService {
         return callAI(truncate(sb.toString(), MAX_PROMPT_CHARS));
     }
 
-    public String curateItinerary(String destination, String startDate, String endDate,
+    public ItineraryResponse curateItinerary(String destination, String startDate, String endDate,
                                    String budget, String travelStyle, List<Idea> ideas,
                                    String chatSummary) {
         String ideasText = ideas.stream()
@@ -166,9 +168,40 @@ public class GeminiService {
               .append("Day budget table\n")
               .append("3 insider tips\n\n")
               .append("End with: Total budget table, Packing list, Emergency numbers, Apps needed.\n")
-              .append("Use rich markdown, emojis, tables. Include real dhaba names on route with phone numbers.");
+              .append("MUST OUTPUT IN STRICT JSON ONLY. Ensure keys are in quotes and it is valid JSON.\n")
+              .append("Format required:\n")
+              .append("{\n")
+              .append("  \"days\": [\n")
+              .append("    {\n")
+              .append("      \"day\": 1,\n")
+              .append("      \"title\": \"Title\",\n")
+              .append("      \"route\": \"A -> B\",\n")
+              .append("      \"scenicRating\": \"★★★★☆\",\n")
+              .append("      \"stops\": [\"Km 10: Stop 1 - Activity (1 hr)\"],\n")
+              .append("      \"schedule\": [\"08:00 AM - Breakfast at X (₹200) ⭐4.5 📞+91-XXXXX\"],\n")
+              .append("      \"hotel\": \"Hotel Name ⭐4.5 ₹2000 📞+91-XXXXX\",\n")
+              .append("      \"food\": [\"Lunch at Y - Dish (₹300) ⭐4\"],\n")
+              .append("      \"risks\": [\"Activity - 🟢Safe - Tip\"],\n")
+              .append("      \"guide\": \"Name 📞+91-XXXXX ₹1000/day\",\n")
+              .append("      \"budget\": \"₹3000 total\",\n")
+              .append("      \"tips\": [\"Tip 1\", \"Tip 2\", \"Tip 3\"]\n")
+              .append("    }\n")
+              .append("  ],\n")
+              .append("  \"tips\": [\"Global Tip 1\"],\n")
+              .append("  \"packingList\": [\"Item 1\", \"Item 2\"]\n")
+              .append("}");
 
-        return callAI(truncate(prompt.toString(), MAX_PROMPT_CHARS));
+        String responseJson = callAI(truncate(prompt.toString(), MAX_PROMPT_CHARS));
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(responseJson, ItineraryResponse.class);
+        } catch (Exception e) {
+            System.err.println("JSON Parsing failed! Raw response: " + responseJson);
+            e.printStackTrace();
+            ItineraryResponse fallback = new ItineraryResponse();
+            fallback.setTips(List.of("Error parsing AI response: " + e.getMessage()));
+            return fallback;
+        }
     }
 
     /**
@@ -304,15 +337,15 @@ public class GeminiService {
         lastGroqError = "";
         lastGeminiError = "";
 
-        // Priority: Qwen (free via OpenRouter) -> Groq -> Gemini
-        String qwenResult = callQwen(prompt);
-        if (qwenResult != null) return qwenResult;
-
+        // Priority: Groq -> Gemini -> Qwen
         String groqResult = callGroq(prompt);
         if (groqResult != null) return groqResult;
 
         String geminiResult = callGemini(prompt);
         if (geminiResult != null) return geminiResult;
+
+        String qwenResult = callQwen(prompt);
+        if (qwenResult != null) return qwenResult;
 
         return "AI is temporarily unavailable. Please try again.\n\n" +
                "**Debug info:**\n" +
@@ -385,24 +418,27 @@ public class GeminiService {
         c = c.replaceAll("(?s)<think>.*?</think>", "");
         c = c.replaceAll("(?s)<reasoning>.*?</reasoning>", "");
         c = c.replaceAll("(?is)<\\|channel\\|>analysis.*?<\\|message\\|>", "");
-        c = c.trim();
 
-        // If the model leaked planning text before the real answer, cut to the
-        // first markdown heading when a reasoning phrase precedes it.
-        int headingIdx = firstHeadingIndex(c);
-        if (headingIdx > 0) {
-            String preamble = c.substring(0, headingIdx).toLowerCase();
-            String[] leaks = {"we need to", "we must", "let me", "i need to", "the user wants",
-                    "we should", "we can ", "first,", "okay,", "let's ", "i'll ", "i will ",
-                    "to produce", "we'll ", "analysis"};
-            for (String l : leaks) {
-                if (preamble.contains(l)) {
-                    c = c.substring(headingIdx).trim();
-                    break;
-                }
-            }
+        // Strip markdown json fences
+        c = c.replaceAll("```json", "");
+        c = c.replaceAll("```", "");
+        
+        c = c.trim();
+        
+        // Find first '{' to drop any prefix text
+        int startObj = c.indexOf('{');
+        if (startObj > 0) {
+            c = c.substring(startObj);
         }
+        
+        // Find last '}'
+        int endObj = c.lastIndexOf('}');
+        if (endObj > 0) {
+            c = c.substring(0, endObj + 1);
+        }
+
         return c.trim();
+
     }
 
     private int firstHeadingIndex(String c) {
