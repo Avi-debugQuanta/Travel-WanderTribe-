@@ -76,11 +76,22 @@ export const proposalApi = {
 
 export const WS_BASE = (() => {
   const loc = window.location;
-  const base = import.meta.env.VITE_API_URL;
-  if (base && base.startsWith('http')) {
-    return base.replace('/api', '');
+  const base = import.meta.env.VITE_API_URL || '';
+  
+  // Strip '/api' from the end of the base URL if it exists
+  // because the WebSocket endpoint is registered at the root '/ws'
+  let cleanBase = base;
+  if (cleanBase.endsWith('/api')) {
+    cleanBase = cleanBase.slice(0, -4);
+  } else if (cleanBase.endsWith('/api/')) {
+    cleanBase = cleanBase.slice(0, -5);
   }
-  return loc.origin;
+
+  if (cleanBase) {
+    if (cleanBase.startsWith('http')) return cleanBase;
+    return `${loc.protocol}//${loc.host}${cleanBase}`;
+  }
+  return '';
 })();
 
 export default api;
