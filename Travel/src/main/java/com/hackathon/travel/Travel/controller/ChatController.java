@@ -62,19 +62,39 @@ public class ChatController {
         if (askAI) {
             String cleanedMessage = userText.replaceAll("(?i)@ai\\s*", "").trim();
             if (cleanedMessage.isEmpty()) cleanedMessage = "Give me travel suggestions";
+            final String finalMessage = cleanedMessage;
 
             Trip trip = tripRepository.findById(tripId).orElse(null);
             String tripContext = buildTripContext(trip, ideaRepository.findByTripId(tripId));
 
             List<ChatMessage> history = chatMessageRepository.findByTripIdOrderByTimestampAsc(tripId);
-            String aiResponse = geminiService.chat(cleanedMessage, history, tripContext);
-
-            ChatMessage aiMsg = new ChatMessage(tripId, null, MessageRole.AI, aiResponse);
+            
+            ChatMessage aiMsg = new ChatMessage(tripId, null, MessageRole.AI, "");
             aiMsg.setUserName("WanderTribe AI");
-            chatMessageRepository.save(aiMsg);
+            chatMessageRepository.save(aiMsg); // Get DB ID so frontend can merge chunks
             result.add(aiMsg);
 
-            messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/chat", (Object) aiMsg);
+            new Thread(() -> {
+                StringBuilder fullResponse = new StringBuilder();
+                geminiService.streamChat(finalMessage, history, tripContext,
+                    (token) -> {
+                        fullResponse.append(token);
+                        aiMsg.setContent(fullResponse.toString());
+                        messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/chat", (Object) aiMsg);
+                    },
+                    () -> {
+                        aiMsg.setContent(fullResponse.toString());
+                        chatMessageRepository.save(aiMsg);
+                        messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/chat", (Object) aiMsg);
+                    },
+                    (error) -> {
+                        fullResponse.append("\n\n[Error: ").append(error).append("]");
+                        aiMsg.setContent(fullResponse.toString());
+                        chatMessageRepository.save(aiMsg);
+                        messagingTemplate.convertAndSend("/topic/trip/" + tripId + "/chat", (Object) aiMsg);
+                    }
+                );
+            }).start();
         }
 
         return ResponseEntity.ok(result);

@@ -542,4 +542,87 @@ public class GeminiService {
     private static String truncate(String s, int maxLen) {
         return (s != null && s.length() > maxLen) ? s.substring(0, maxLen) : s;
     }
+
+    public void streamChat(String userMessage, List<ChatMessage> history, String tripContext, java.util.function.Consumer<String> onToken, Runnable onComplete, java.util.function.Consumer<String> onError) {
+        StringBuilder sb = new StringBuilder(CHAT_SYSTEM_PROMPT);
+        if (tripContext != null && !tripContext.isBlank()) {
+            String trimmedCtx = tripContext.length() > 500 ? tripContext.substring(0, 500) : tripContext;
+            sb.append("\n\n").append(trimmedCtx);
+        }
+        if (history != null && !history.isEmpty()) {
+            int start = Math.max(0, history.size() - 3);
+            sb.append("\n\nRecent:");
+            for (int i = start; i < history.size(); i++) {
+                ChatMessage m = history.get(i);
+                String line = m.getRole().name() + ": " + truncate(m.getContent(), 150);
+                sb.append("\n").append(line);
+            }
+        }
+        sb.append("\n\nUser: ").append(userMessage).append("\nAssistant:");
+        String prompt = truncate(sb.toString(), MAX_PROMPT_CHARS);
+
+        String key = getGroqKey();
+        if (key == null || key.isBlank()) {
+            onError.accept("No valid Groq API key found.");
+            return;
+        }
+
+        try {
+            List<Map<String, String>> messages = new ArrayList<>();
+            messages.add(Map.of("role", "system", "content", CHAT_SYSTEM_PROMPT));
+            messages.add(Map.of("role", "user", "content", prompt));
+
+            Map<String, Object> requestBody = new LinkedHashMap<>();
+            requestBody.put("model", GROQ_MODEL);
+            requestBody.put("messages", messages);
+            requestBody.put("temperature", 0.7);
+            requestBody.put("max_tokens", MAX_RESPONSE_TOKENS);
+            requestBody.put("stream", true);
+
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            String jsonBody = mapper.writeValueAsString(requestBody);
+
+            java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
+                    .uri(java.net.URI.create(GROQ_URL))
+                    .header("Authorization", "Bearer " + key)
+                    .header("Content-Type", "application/json")
+                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+            client.sendAsync(request, java.net.http.HttpResponse.BodyHandlers.ofLines())
+                    .thenAccept(response -> {
+                        response.body().forEach(line -> {
+                            if (line.startsWith("data: ")) {
+                                String data = line.substring(6).trim();
+                                if (data.equals("[DONE]")) {
+                                    return;
+                                }
+                                try {
+                                    com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(data);
+                                    com.fasterxml.jackson.databind.JsonNode choices = node.get("choices");
+                                    if (choices != null && choices.isArray() && choices.size() > 0) {
+                                        com.fasterxml.jackson.databind.JsonNode delta = choices.get(0).get("delta");
+                                        if (delta != null && delta.has("content")) {
+                                            String content = delta.get("content").asText();
+                                            if (content != null && !content.isEmpty()) {
+                                                onToken.accept(content);
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    // Ignore parse errors on partial streams
+                                }
+                            }
+                        });
+                        onComplete.run();
+                    })
+                    .exceptionally(e -> {
+                        onError.accept("Stream failed: " + e.getMessage());
+                        return null;
+                    });
+        } catch (Exception e) {
+            onError.accept("Request failed: " + e.getMessage());
+        }
+    }
 }

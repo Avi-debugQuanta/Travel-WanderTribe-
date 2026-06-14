@@ -38,7 +38,10 @@ export default function ChatBot({ tripId, members = [] }) {
           setWsConnected(true);
           client.subscribe(`/topic/trip/${tripId}/chat`, (msg) => {
             const data = JSON.parse(msg.body);
-            if (data.id && seenIds.current.has(data.id)) return;
+            if (data.id && seenIds.current.has(data.id)) {
+              setMessages(prev => prev.map(m => m.id === data.id ? data : m));
+              return;
+            }
             if (data.id) seenIds.current.add(data.id);
             setMessages(prev => [...prev, data]);
           });
@@ -80,14 +83,22 @@ export default function ChatBot({ tripId, members = [] }) {
 
     try {
       const { data } = await chatApi.send(tripId, msg, user?.id, user?.name);
-      const newMsgs = data.filter(m => m.id && !seenIds.current.has(m.id));
-      newMsgs.forEach(m => seenIds.current.add(m.id));
-
       setMessages(prev => {
         const withoutOptimistic = prev.filter(p => p !== userMsg);
-        const existing = new Set(withoutOptimistic.filter(p => p.id).map(p => p.id));
-        const toAdd = data.filter(m => !existing.has(m.id));
-        return [...withoutOptimistic, ...toAdd];
+        let updated = [...withoutOptimistic];
+        data.forEach(m => {
+          if (!m.id) return;
+          const idx = updated.findIndex(p => p.id === m.id);
+          if (idx !== -1) {
+             // Let the websocket stream take precedence if it already started filling content
+             if (m.content === "" && updated[idx].content !== "") return;
+             updated[idx] = m;
+          } else {
+             updated.push(m);
+             seenIds.current.add(m.id);
+          }
+        });
+        return updated;
       });
     } catch {
       setMessages(prev => [...prev, {
