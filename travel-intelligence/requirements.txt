@@ -3,3 +3,8 @@ uvicorn
 pydantic
 requests
 python-dotenv
+pymongo
+chromadb
+playwright
+beautifulsoup4
+scrapetube
