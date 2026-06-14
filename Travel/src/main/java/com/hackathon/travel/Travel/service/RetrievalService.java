@@ -25,9 +25,11 @@ import java.util.Set;
 public class RetrievalService {
 
     private final RouteDatasetLoader dataset;
+    private final EmbeddingService embeddingService;
 
-    public RetrievalService(RouteDatasetLoader dataset) {
+    public RetrievalService(RouteDatasetLoader dataset, EmbeddingService embeddingService) {
         this.dataset = dataset;
+        this.embeddingService = embeddingService;
     }
 
     public static class RetrievalResult {
@@ -152,11 +154,16 @@ public class RetrievalService {
         Set<String> styleTags = styleTagsFor(travelStyle);
         Set<String> ideaKeywords = ideaKeywords(ideas);
 
+        // Generate a semantic query and get its embedding
+        String semanticQuery = "A place perfect for " + (travelStyle != null ? travelStyle : "travel") + " style. " +
+                (ideas != null && !ideas.isEmpty() ? "Looking for: " + String.join(", ", ideaKeywords) : "");
+        double[] queryEmbedding = embeddingService.getEmbedding(semanticQuery);
+
         List<ScoredPlace> scored = new ArrayList<>();
         for (String srId : subRegions) {
             boolean isPrimary = primary.isEmpty() || primary.contains(srId);
             for (Place p : dataset.getPlacesBySubRegion(srId)) {
-                double score = scorePlace(p, styleTags, ideaKeywords, month, isPrimary, p.getId().equals(entryHub));
+                double score = scorePlace(p, styleTags, ideaKeywords, month, isPrimary, p.getId().equals(entryHub), queryEmbedding);
                 if (score > Double.NEGATIVE_INFINITY) {
                     scored.add(new ScoredPlace(p, score));
                 }
@@ -199,7 +206,7 @@ public class RetrievalService {
     }
 
     private double scorePlace(Place p, Set<String> styleTags, Set<String> ideaKeywords,
-                              int month, boolean isPrimary, boolean isHub) {
+                              int month, boolean isPrimary, boolean isHub, double[] queryEmbedding) {
         double score = 0;
 
         // Season fit: hard filter when month is known.
@@ -231,6 +238,19 @@ public class RetrievalService {
 
         if (isPrimary) score += 2.0;
         if (isHub) score += 5.0;
+
+        // --- NEW: Semantic search using vector embeddings ---
+        if (queryEmbedding != null) {
+            String placeText = p.getName() + ": " + p.getReviewSnippet() + " " + 
+                               (p.getTags() != null ? String.join(" ", p.getTags()) : "");
+            double[] placeEmbedding = embeddingService.getEmbedding(placeText);
+            if (placeEmbedding != null) {
+                double sim = embeddingService.cosineSimilarity(queryEmbedding, placeEmbedding);
+                if (sim > 0.4) {
+                    score += sim * 5.0;
+                }
+            }
+        }
 
         return score;
     }
