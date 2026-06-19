@@ -133,10 +133,45 @@ class AIService:
         return self._call_groq_sync(messages)
 
     def curate(self, request: CurateRequest) -> dict:
+        # 1. Ambiguity Check (Middleware)
+        # If the user hasn't already provided clarification answers, check if we need them
+        if not request.clarificationAnswers:
+            ambiguity_prompt = f"""Review the following travel request:
+Destination: {request.destination}
+Dates: {request.startDate} to {request.endDate}
+Budget: {request.budget}
+Style: {request.travelStyle}
+User Notes: {request.chatSummary}
+
+Is this request too vague to build a highly detailed itinerary? For example, if it lacks details on group composition (solo/family/friends), specific interests (adventure/relaxation/culture), or preferred transport.
+If it is TOO VAGUE, return JSON with "needs_clarification": true and a "questions" array of 2-3 specific questions to ask the user.
+If it is CLEAR ENOUGH, return "needs_clarification": false.
+Output ONLY valid JSON."""
+
+            ambiguity_messages = [
+                {"role": "system", "content": "You are a travel ambiguity checker. Output ONLY valid JSON."},
+                {"role": "user", "content": ambiguity_prompt}
+            ]
+            
+            ambiguity_res = self._call_groq_sync(ambiguity_messages, json_mode=True)
+            try:
+                ambiguity_data = json.loads(ambiguity_res)
+                if ambiguity_data.get("needs_clarification") and ambiguity_data.get("questions"):
+                    return {
+                        "type": "clarification",
+                        "questions": ambiguity_data["questions"]
+                    }
+            except Exception as e:
+                print(f"[Ambiguity Check Failed] {e}")
+
+        # 2. Proceed to generation
         knowledge = rag_service.get_knowledge_for_destination(request.destination)
+        
+        clarifications_text = f"\nUser's Clarifications: {request.clarificationAnswers}\n" if request.clarificationAnswers else ""
+        
         prompt = f"""ROAD-TRIP ITINERARY for: {request.destination} | {request.startDate}→{request.endDate} | ₹{request.budget}/person | Style: {request.travelStyle}
 Group ideas: {request.ideas}
-Notes: {request.chatSummary}
+Notes: {request.chatSummary}{clarifications_text}
 
 === VERIFIED ROUTE DATA (use ONLY these towns/stops, distances & ratings) ===
 {knowledge}

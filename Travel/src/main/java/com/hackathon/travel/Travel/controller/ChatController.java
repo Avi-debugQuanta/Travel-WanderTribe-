@@ -171,9 +171,10 @@ public class ChatController {
     }
 
     @PostMapping("/curate")
-    public ResponseEntity<Map<String, Object>> curateItinerary(@PathVariable Long tripId) {
+    public ResponseEntity<Map<String, Object>> curateItinerary(@PathVariable Long tripId, @RequestBody(required = false) Map<String, String> body) {
         Trip trip = tripRepository.findById(tripId).orElse(null);
         if (trip == null) return ResponseEntity.notFound().build();
+        String clarificationAnswers = body != null ? body.get("clarificationAnswers") : null;
 
         List<Idea> ideas = ideaRepository.findByTripId(tripId);
         List<ChatMessage> recentChat = chatMessageRepository.findByTripIdOrderByTimestampAsc(tripId);
@@ -193,7 +194,8 @@ public class ChatController {
                 trip.getBudget(),
                 trip.getTravelStyle(),
                 ideas,
-                chatSummary + "\n\n" + bookingsContext
+                chatSummary + "\n\n" + bookingsContext,
+                clarificationAnswers
         );
 
         return ResponseEntity.ok(Map.of("itinerary", itinerary));

@@ -35,7 +35,7 @@ export const chatApi = {
   getHistory: (tripId) => api.get(`/trips/${tripId}/chat`),
   send: (tripId, message, userId, userName) => api.post(`/trips/${tripId}/chat`, { message, userId: String(userId || ''), userName: userName || '' }),
   clearHistory: (tripId, email) => api.delete(`/trips/${tripId}/chat`, { params: email ? { email } : {} }),
-  curate: (tripId) => api.post(`/trips/${tripId}/curate`),
+  curate: (tripId, clarificationAnswers) => api.post(`/trips/${tripId}/curate`, { clarificationAnswers }),
   getSeason: (tripId) => api.get(`/trips/${tripId}/season`),
   getAISummary: (tripId) => api.get(`/trips/${tripId}/ai-summary`),
 };

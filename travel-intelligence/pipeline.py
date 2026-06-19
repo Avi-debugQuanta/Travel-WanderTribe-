@@ -9,6 +9,7 @@ from scrapers.google_makemytrip_free import scrape_google_places_free, scrape_ma
 from scrapers.osm_free_api import scrape_osm_places
 from scrapers.youtube import scrape_youtube_vlogs
 from scrapers.booking_agoda import scrape_booking_agoda_free
+from scrapers.cabs_offbeat import scrape_cabs_and_offbeat
 
 STATES = ["Himachal Pradesh", "Kashmir", "Uttarakhand"]
 
@@ -32,6 +33,9 @@ async def run_pipeline():
         print("-> Running OpenStreetMap API...")
         osm_data = scrape_osm_places(state)
         
+        print("-> Running OpenStreetMap Cabs & Offbeat API...")
+        cabs_data = scrape_cabs_and_offbeat(state)
+        
         print("-> Running YouTube Vlogs...")
         yt_data = scrape_youtube_vlogs(state)
         
@@ -49,7 +53,7 @@ async def run_pipeline():
         booking_data = await scrape_booking_agoda_free(state)
         
         state_data = (
-            thrillophilia_data + govt_data + osm_data + yt_data + 
+            thrillophilia_data + govt_data + osm_data + cabs_data + yt_data + 
             wanderon_data + google_data + mmt_data + booking_data
         )
         
@@ -58,15 +62,18 @@ async def run_pipeline():
         
         # Insert into Mongo if available
         if db is not None and len(state_data) > 0:
-            collection = db["raw_scraped_data"]
-            collection.insert_many(state_data)
-            print(f"Saved to MongoDB for {state}")
+            try:
+                collection = db["raw_scraped_data"]
+                collection.insert_many(state_data)
+                print(f"Saved to MongoDB for {state}")
+            except Exception as e:
+                print(f"Failed to save to MongoDB (is it running?): {e}")
 
     print("\nPipeline complete. Total items:", len(all_data))
     
     # Always save to JSON as backup
     with open("scraped_backup.json", "w", encoding="utf-8") as f:
-        json.dump(all_data, f, indent=2)
+        json.dump(all_data, f, indent=2, default=str)
     print("Data saved to scraped_backup.json")
 
 if __name__ == "__main__":

@@ -73,7 +73,7 @@ public class GeminiService {
 
     public ItineraryResponse curateItinerary(String destination, String startDate, String endDate,
                                    String budget, String travelStyle, List<Idea> ideas,
-                                   String chatSummary) {
+                                   String chatSummary, String clarificationAnswers) {
         String ideasText = ideas.stream()
                 .limit(5)
                 .map(i -> "- " + i.getTitle() + " (" + i.getVoteCount() + " upvotes)")
@@ -88,6 +88,7 @@ public class GeminiService {
             requestBody.put("travelStyle", travelStyle);
             requestBody.put("ideas", ideasText);
             requestBody.put("chatSummary", chatSummary != null ? chatSummary : "");
+            requestBody.put("clarificationAnswers", clarificationAnswers);
 
             Map<String, Object> response = restClient.post()
                     .uri(pythonServiceUrl + "/ai/curate")

@@ -6,6 +6,8 @@ public class ItineraryResponse {
     private List<DayPlan> days;
     private List<String> tips;
     private List<String> packingList;
+    private String type;
+    private List<String> questions;
 
     public ItineraryResponse() {}
 
@@ -17,4 +19,10 @@ public class ItineraryResponse {
 
     public List<String> getPackingList() { return packingList; }
     public void setPackingList(List<String> packingList) { this.packingList = packingList; }
+
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+
+    public List<String> getQuestions() { return questions; }
+    public void setQuestions(List<String> questions) { this.questions = questions; }
 }

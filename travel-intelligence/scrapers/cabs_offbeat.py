@@ -2,24 +2,20 @@ import requests
 import json
 import time
 
-def scrape_osm_places(state: str):
+def scrape_cabs_and_offbeat(state: str):
     """
-    Uses the free OpenStreetMap Overpass API to fetch authentic restaurants, 
-    hotels, and tourist attractions for a given state.
+    Uses OpenStreetMap Overpass API to fetch taxi stands and offbeat accommodations (guest_house, chalet, hostel).
     """
-    print(f"Scraping OpenStreetMap (Overpass API) for: {state}")
+    print(f"Scraping Cabs & Offbeat Places (Overpass API) for: {state}")
     
-    # Overpass QL query to find places in the given state
-    # We look for tourism=attraction, amenity=restaurant, tourism=hotel
     overpass_url = "http://overpass-api.de/api/interpreter"
     
     overpass_query = f"""
     [out:json][timeout:25];
     area["name"="{state}"]["admin_level"="4"]->.searchArea;
     (
-      node["tourism"="attraction"](area.searchArea);
-      node["amenity"="restaurant"](area.searchArea);
-      node["tourism"="hotel"](area.searchArea);
+      node["amenity"="taxi"](area.searchArea);
+      node["tourism"~"guest_house|chalet|hostel"](area.searchArea);
     );
     out body;
     """
@@ -27,10 +23,9 @@ def scrape_osm_places(state: str):
     data = []
     
     try:
-        headers = {"User-Agent": "WanderTribeBot/1.0 (contact@wandertribe.local)"}
+        headers = {"User-Agent": "WanderTribeBot/1.1 (contact@wandertribe.local)"}
         response = requests.post(overpass_url, data={'data': overpass_query}, headers=headers, timeout=30)
         
-        # Overpass has strict rate limiting
         if response.status_code == 429:
             print("OSM Overpass Rate limited. Sleeping 10s...")
             time.sleep(10)
@@ -43,25 +38,25 @@ def scrape_osm_places(state: str):
             for el in elements:
                 tags = el.get('tags', {})
                 name = tags.get('name')
-                if not name:
+                
+                # If there's no name, we might still want it if it's a taxi stand
+                if not name and "amenity" in tags and tags["amenity"] == "taxi":
+                    name = f"Local Taxi Stand - {state}"
+                elif not name:
                     continue
                 
-                place_type = "place"
-                if "amenity" in tags and tags["amenity"] == "restaurant":
-                    place_type = "restaurant"
-                elif "tourism" in tags and tags["tourism"] == "hotel":
-                    place_type = "hotel"
-                elif "tourism" in tags and tags["tourism"] == "attraction":
-                    place_type = "attraction"
+                place_type = "offbeat_hotel"
+                if "amenity" in tags and tags["amenity"] == "taxi":
+                    place_type = "cab_taxi"
                     
                 data.append({
-                    "source": "OpenStreetMap_Free",
+                    "source": "OpenStreetMap_Cabs",
                     "state": state,
                     "title": name,
                     "type": place_type,
                     "lat": el.get('lat'),
                     "lon": el.get('lon'),
-                    "tags": tags # includes opening_hours, cuisine, website if available
+                    "tags": tags 
                 })
         else:
             print(f"OSM Error: {response.status_code} - {response.text}")
@@ -71,6 +66,5 @@ def scrape_osm_places(state: str):
     return data
 
 if __name__ == "__main__":
-    res = scrape_osm_places("Himachal Pradesh")
-    print(f"Fetched {len(res)} places from OSM.")
-    print(json.dumps(res[:3], indent=2))
+    res = scrape_cabs_and_offbeat("Himachal Pradesh")
+    print(f"Fetched {len(res)} cabs and offbeat places from OSM.")

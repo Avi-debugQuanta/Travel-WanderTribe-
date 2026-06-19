@@ -1,74 +1,77 @@
 import json
 import os
-from typing import List, Dict, Set
-from .models import RegionData, Place, SubRegion
-
-DESTINATIONS = {
-    "manali": """
-MANALI (Altitude: 6,726 ft, District: Kullu, Himachal Pradesh)
-... [Content omitted for brevity, but we'll include the full strings if needed, actually I will copy it exactly]
-""",
-    # I should copy the full strings to ensure it's robust. Let's just do a shortened version for now that the LLM can use, or I can paste the full text.
-}
+from .db import get_chroma_collection
 
 class RAGService:
     def __init__(self):
-        self.data: RegionData = None
-        self.places_by_id = {}
-        self.subregions_by_id = {}
-        self.load_data()
-        self.setup_knowledge()
+        self.collection = get_chroma_collection()
 
-    def load_data(self):
-        file_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'himachal.json')
+    def get_knowledge_for_destination(self, destination: str, top_k: int = 15) -> str:
+        """
+        Queries ChromaDB for the destination to retrieve the best matched real scraped data 
+        (hotels, restaurants, attractions, cabs).
+        """
+        if not destination or self.collection is None:
+            return "No real-time data available. Proceed with general knowledge."
+            
         try:
-            with open(file_path, 'r') as f:
-                raw_data = json.load(f)
-                self.data = RegionData(**raw_data)
+            # Query the vector DB
+            results = self.collection.query(
+                query_texts=[f"Travel information, hotels, cabs, offbeat places, and restaurants in {destination}"],
+                n_results=top_k
+            )
+            
+            if not results or not results.get("documents") or len(results["documents"][0]) == 0:
+                return f"No specific local data found in DB for '{destination}'."
                 
-            for p in self.data.places:
-                self.places_by_id[p.id] = p
-            for sr in self.data.subRegions:
-                self.subregions_by_id[sr.id] = sr
-            print(f"[RAGService] Loaded {len(self.data.places)} places and {len(self.data.subRegions)} subregions.")
+            knowledge = f"\n\n=== VERIFIED RAG DATA FOR {destination.upper()} ===\n"
+            
+            # Group by type if possible
+            hotels = []
+            attractions = []
+            cabs = []
+            others = []
+            
+            docs = results["documents"][0]
+            metas = results["metadatas"][0]
+            
+            for doc, meta in zip(docs, metas):
+                item_type = meta.get("type", "")
+                title = meta.get("title", "")
+                price = meta.get("price", "N/A")
+                source = meta.get("source", "")
+                
+                info_str = f"- {title} "
+                if price and price != "N/A" and price != "unknown":
+                    info_str += f"(Price: {price}) "
+                info_str += f"[{source}]"
+                
+                if item_type == "hotel" or item_type == "offbeat_hotel":
+                    hotels.append(info_str)
+                elif item_type == "attraction" or item_type == "place":
+                    attractions.append(info_str)
+                elif item_type == "cab_taxi":
+                    cabs.append(info_str)
+                else:
+                    others.append(info_str)
+            
+            if hotels:
+                knowledge += "\n**HOTELS & STAY:**\n" + "\n".join(hotels)
+            if attractions:
+                knowledge += "\n\n**ATTRACTIONS & RESTAURANTS:**\n" + "\n".join(attractions)
+            if cabs:
+                knowledge += "\n\n**CAB & TAXI STANDS:**\n" + "\n".join(cabs)
+            if others:
+                knowledge += "\n\n**OTHER INFO:**\n" + "\n".join(others)
+                
+            knowledge += "\n\n=== GENERAL TIPS ===\n"
+            knowledge += "- Road conditions: Mountain roads are narrow. Travel in daylight only.\n"
+            knowledge += "- Payment: UPI works mostly everywhere except remote areas.\n"
+            
+            return knowledge
+            
         except Exception as e:
-            print(f"[RAGService] Failed to load data: {e}")
-
-    def setup_knowledge(self):
-        self.DESTINATIONS = {
-            "manali": "MANALI (Altitude: 6,726 ft, District: Kullu, Himachal Pradesh)\nTOP PLACES: Old Manali, Solang Valley, Rohtang Pass, Sethan Village, Jogini Waterfall.\nFOOD: Siddhu, Trout Fish, Dham. Cafe: Lazy Dog Cafe.",
-            "kashmir": "KASHMIR / SRINAGAR (Altitude: 5,200 ft, J&K)\nTOP PLACES: Dal Lake, Mughal Gardens, Gulmarg, Pahalgam, Sonmarg.\nFOOD: Wazwan, Kahwa, Noon Chai.",
-            "spiti": "SPITI VALLEY (Altitude: 12,500 ft, Himachal Pradesh)\nTOP PLACES: Key Monastery, Chandratal Lake, Kaza, Kibber, Tabo, Chicham Bridge.\nFOOD: Thukpa, Momos, Butter tea.",
-            "kasol": "KASOL & PARVATI VALLEY (Altitude: 5,177 ft, Himachal Pradesh)\nTOP PLACES: Kasol Village, Kheerganga Trek, Tosh, Malana, Manikaran.\nFOOD: Israeli food, Shakshuka, Hummus.",
-            "shimla": "SHIMLA (Altitude: 7,238 ft, Himachal Pradesh)\nTOP PLACES: The Ridge, Mall Road, Jakhoo Temple, Toy Train, Kufri.\nFOOD: Indian Coffee House, Cafe Simla Times.",
-            "dharamshala": "DHARAMSHALA / MCLEODGANJ (Altitude: 6,831 ft, Himachal Pradesh)\nTOP PLACES: McLeodganj, Tsuglagkhang Complex, Triund Trek, Bhagsu Nag.\nFOOD: Tibetan food, Thukpa, Momos.",
-            "gulmarg": "GULMARG (Altitude: 8,694 ft, J&K)\nTOP PLACES: Gulmarg Gondola, Skiing, Apharwat Peak, Alpather Lake.",
-            "leh": "LEH / LADAKH (Altitude: 11,562 ft, Ladakh)\nTOP PLACES: Pangong Tso, Nubra Valley, Khardung La, Magnetic Hill, Hemis Monastery.",
-            "rishikesh": "RISHIKESH (Altitude: 1,115 ft, Uttarakhand)\nTOP PLACES: Laxman Jhula, Ram Jhula, Beatles Ashram, River Rafting.\nFOOD: 100% vegetarian city."
-        }
-
-    def get_knowledge_for_destination(self, destination: str) -> str:
-        if not destination:
-            return ""
-            
-        lower_dest = destination.lower().strip()
-        knowledge = "\n\n=== LOCAL DESTINATION KNOWLEDGE BASE ===\n"
-        
-        found = False
-        for key, value in self.DESTINATIONS.items():
-            if key in lower_dest or lower_dest in key:
-                knowledge += value + "\n"
-                found = True
-                
-        if not found:
-            knowledge += f"No specific local data for '{destination}'. Use your general knowledge but mention that real-time prices may vary.\n"
-            
-        knowledge += "\n=== GENERAL TIPS ===\n"
-        knowledge += "- Road conditions: Mountain roads are narrow, hairpin bends. Travel in daylight only.\n"
-        knowledge += "- Network: Jio works best. BSNL for remote areas.\n"
-        knowledge += "- Medical: Carry basic first aid, Diamox for altitude.\n"
-        knowledge += "- Payment: UPI works mostly everywhere except remote areas where cash is king.\n"
-        
-        return knowledge
+            print(f"[RAGService] Error querying ChromaDB: {e}")
+            return "Error retrieving data. Proceed with general knowledge."
 
 rag_service = RAGService()

@@ -72,6 +72,7 @@ class CurateRequest(BaseModel):
     travelStyle: str
     ideas: str
     chatSummary: str
+    clarificationAnswers: Optional[str] = None
 
 class SeasonRequest(BaseModel):
     destination: str

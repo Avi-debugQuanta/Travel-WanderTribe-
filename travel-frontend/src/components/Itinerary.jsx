@@ -420,10 +420,12 @@ export default function Itinerary({ tripId }) {
   const [proposals, setProposals] = useState([]);
   const [tripIdeas, setTripIdeas] = useState([]);
   const [progress, setProgress] = useState('');
+  const [clarificationQuestions, setClarificationQuestions] = useState([]);
+  const [answers, setAnswers] = useState({});
 
   const days = useMemo(() => parseDays(itinerary), [itinerary]);
 
-  const generateItinerary = async () => {
+  const generateItinerary = async (clarificationAnswers = null) => {
     setLoading(true);
     setProgress('Fetching group ideas & bookings...');
     try {
@@ -433,14 +435,21 @@ export default function Itinerary({ tripId }) {
 
       setProgress('AI is crafting your detailed roadmap...');
       const [{ data }, bRes, pRes] = await Promise.all([
-        chatApi.curate(tripId),
+        chatApi.curate(tripId, clarificationAnswers),
         bookingApi.getByTrip(tripId).catch(() => ({ data: [] })),
         proposalApi.getAll(tripId).catch(() => ({ data: [] })),
       ]);
-      setItinerary(data.itinerary);
-      setBookings(bRes.data || []);
-      setProposals((pRes.data || []).filter(p => p.status === 'APPROVED'));
-      setActiveDay(0);
+      
+      if (data.itinerary?.type === 'clarification' && data.itinerary?.questions) {
+        setClarificationQuestions(data.itinerary.questions);
+        setItinerary(null);
+      } else {
+        setClarificationQuestions([]);
+        setItinerary(data.itinerary);
+        setBookings(bRes.data || []);
+        setProposals((pRes.data || []).filter(p => p.status === 'APPROVED'));
+        setActiveDay(0);
+      }
       setProgress('');
     } catch {
       setItinerary('Failed to generate itinerary. Please try again.');
@@ -460,10 +469,52 @@ export default function Itinerary({ tripId }) {
     setLoading(false);
   };
 
+  const handleClarificationSubmit = () => {
+    const formattedAnswers = Object.entries(answers).map(([i, a]) => `Q: ${clarificationQuestions[i]}\nA: ${a}`).join('\n\n');
+    setClarificationQuestions([]);
+    generateItinerary(formattedAnswers);
+  };
+
   return (
-    <div className="p-4 sm:p-6">
+    <div className="p-4 sm:p-6 relative">
+      {clarificationQuestions.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setClarificationQuestions([])} />
+          <div className="bg-slate-800 border border-violet-500/30 rounded-2xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl shadow-violet-500/20 animate-fadeIn">
+            <h3 className="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+              <span className="text-violet-400">🤖</span> Clarify your trip
+            </h3>
+            <p className="text-white/60 text-sm mb-6">WanderTribe AI needs a few more details to create the perfect itinerary for you.</p>
+            
+            <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide">
+              {clarificationQuestions.map((q, i) => (
+                <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                  <label className="block text-sm font-medium text-violet-300 mb-2">{q}</label>
+                  <textarea
+                    value={answers[i] || ''}
+                    onChange={(e) => setAnswers({...answers, [i]: e.target.value})}
+                    placeholder="Type your answer..."
+                    className="w-full bg-slate-900/50 border border-white/10 rounded-lg p-3 text-sm text-white placeholder-white/30 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all outline-none resize-none"
+                    rows="2"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button onClick={() => setClarificationQuestions([])} className="px-5 py-2.5 rounded-xl font-medium text-white/50 hover:text-white transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleClarificationSubmit} className="px-5 py-2.5 bg-violet-500 hover:bg-violet-400 rounded-xl font-medium text-white transition-all shadow-lg shadow-violet-500/25">
+                Generate Itinerary
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-wrap gap-3 mb-6">
-        <button onClick={generateItinerary} disabled={loading}
+        <button onClick={() => generateItinerary(null)} disabled={loading}
           className="px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 disabled:opacity-50 rounded-xl font-semibold transition-all hover:scale-105 flex items-center gap-2 text-base shadow-lg shadow-emerald-500/20">
           {loading ? (
             <><svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {progress || 'Generating...'}</>
