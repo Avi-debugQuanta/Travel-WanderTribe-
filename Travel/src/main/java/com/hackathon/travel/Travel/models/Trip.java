@@ -37,6 +37,7 @@ public class Trip {
     private String travelStyle;
     private String vibePreference;
     private String tripPassword;
+    private Boolean isPublic = false;
 
     @ManyToMany
     @JoinTable(
@@ -63,6 +64,7 @@ public class Trip {
     public String getTravelStyle() { return travelStyle; }
     public String getVibePreference() { return vibePreference; }
     public String getTripPassword() { return tripPassword; }
+    public Boolean getIsPublic() { return isPublic; }
     public Set<User> getMembers() { return members; }
 
     public void setId(Long id) { this.id = id; }
@@ -79,5 +81,6 @@ public class Trip {
     public void setTravelStyle(String travelStyle) { this.travelStyle = travelStyle; }
     public void setVibePreference(String vibePreference) { this.vibePreference = vibePreference; }
     public void setTripPassword(String tripPassword) { this.tripPassword = tripPassword; }
+    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
     public void setMembers(Set<User> members) { this.members = members; }
 }

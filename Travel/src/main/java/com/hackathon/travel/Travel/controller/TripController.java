@@ -67,6 +67,7 @@ public class TripController {
             trip.setFood(updated.getFood());
             trip.setTransportation(updated.getTransportation());
             trip.setAccommodations(updated.getAccommodations());
+            trip.setIsPublic(updated.getIsPublic());
             return ResponseEntity.ok(tripRepository.save(trip));
         }).orElse(ResponseEntity.notFound().build());
     }
@@ -79,7 +80,8 @@ public class TripController {
             Trip trip = tripRepository.findById(tripId).orElse(null);
             if (trip == null) return ResponseEntity.notFound().build();
 
-            if (trip.getTripPassword() != null && !trip.getTripPassword().isBlank()) {
+            boolean isPublic = trip.getIsPublic() != null && trip.getIsPublic();
+            if (!isPublic && trip.getTripPassword() != null && !trip.getTripPassword().isBlank()) {
                 if (password == null || !password.equals(trip.getTripPassword())) {
                     return ResponseEntity.status(403).body(Map.of("error", "Wrong trip password"));
                 }

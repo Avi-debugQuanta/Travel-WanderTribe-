@@ -604,11 +604,8 @@ export default function Itinerary({ tripId }) {
             </div>
           ) : (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <div className="prose prose-invert prose-sm max-w-none
-                prose-h2:text-emerald-400 prose-h3:text-cyan-300
-                prose-table:text-xs prose-th:text-emerald-400 prose-th:bg-emerald-500/5
-                prose-blockquote:border-l-emerald-500/40 prose-blockquote:bg-emerald-500/5 prose-blockquote:rounded-r-lg">
-                <ReactMarkdown>{itinerary}</ReactMarkdown>
+              <div className="prose prose-invert max-w-none text-emerald-100">
+                <ReactMarkdown>{itinerary?.tips?.join('\n') || "Failed to generate itinerary. Please try again later or check your API limits."}</ReactMarkdown>
               </div>
             </div>
           )}

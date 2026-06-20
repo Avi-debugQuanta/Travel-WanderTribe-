@@ -25,7 +25,9 @@ public class GeminiService {
     private String pythonServiceUrl;
 
     public GeminiService() {
-        this.restClient = RestClient.create();
+        this.restClient = RestClient.builder()
+                .requestFactory(new org.springframework.http.client.SimpleClientHttpRequestFactory())
+                .build();
     }
 
     private String extractDestination(String tripContext) {

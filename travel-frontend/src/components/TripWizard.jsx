@@ -102,6 +102,7 @@ export default function TripWizard({ onClose }) {
     food: [], fitness: '', mustVisit: [], groupSize: '', special: [], customFood: '', customVisit: '',
   });
   const [tripPassword, setTripPassword] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
   const [createdTrip, setCreatedTrip] = useState(null);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState([null, null]);
@@ -142,7 +143,7 @@ export default function TripWizard({ onClose }) {
         ? `Food: ${[...personal.food, personal.customFood].filter(Boolean).join(', ')}, Fitness: ${personal.fitness}, Must visit: ${[...personal.mustVisit, personal.customVisit].filter(Boolean).join(', ')}, Group: ${personal.groupSize}, Special: ${personal.special.join(', ') || 'nothing'}`
         : form.description;
       const { data } = await tripApi.create({
-        ...form, budget: String(budgetRange[1]), description: desc, createdBy: user?.name, tripPassword: pw,
+        ...form, budget: String(budgetRange[1]), description: desc, createdBy: user?.name, tripPassword: isPublic ? '' : pw, isPublic,
       });
       setCreatedTrip(data);
 
@@ -451,18 +452,42 @@ export default function TripWizard({ onClose }) {
                   </div>
                 </div>
 
-                {/* Trip Password */}
-                <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-2xl">
-                  <label className="text-amber-300 text-sm font-semibold mb-2 block">🔐 Trip Password (for friends to join)</label>
-                  <div className="flex gap-2">
-                    <input type="text" value={tripPassword} onChange={e => setTripPassword(e.target.value)}
-                      placeholder="Auto-generated if left empty"
-                      className="flex-1 px-4 py-2.5 bg-white/5 border border-white/15 rounded-xl text-white placeholder:text-white/25 focus:border-amber-500 focus:outline-none" />
-                    <button onClick={() => setTripPassword(Math.random().toString(36).slice(2, 8).toUpperCase())}
-                      className="px-4 py-2.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-400 text-sm font-medium transition-colors">
-                      🎲 Generate
+                {/* Privacy Setting */}
+                <div className="p-5 bg-white/5 border border-white/10 rounded-2xl">
+                  <label className="text-white/70 text-sm font-semibold mb-3 block">🌍 Trip Privacy</label>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button onClick={() => setIsPublic(true)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        isPublic ? 'border-emerald-500 bg-emerald-500/20' : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}>
+                      <span className="text-2xl block mb-1">🌍</span>
+                      <p className="font-bold text-sm text-emerald-400">Public</p>
+                      <p className="text-white/40 text-xs mt-1">Anyone with the link can join instantly</p>
+                    </button>
+                    <button onClick={() => setIsPublic(false)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        !isPublic ? 'border-amber-500 bg-amber-500/20' : 'border-white/10 bg-white/5 hover:border-white/20'
+                      }`}>
+                      <span className="text-2xl block mb-1">🔒</span>
+                      <p className="font-bold text-sm text-amber-400">Private</p>
+                      <p className="text-white/40 text-xs mt-1">Requires a password to join the group</p>
                     </button>
                   </div>
+
+                  {!isPublic && (
+                    <div className="animate-slideDown p-4 bg-amber-500/5 border border-amber-500/20 rounded-xl mt-3">
+                      <label className="text-amber-300 text-xs font-semibold mb-2 block">Set Trip Password</label>
+                      <div className="flex gap-2">
+                        <input type="text" value={tripPassword} onChange={e => setTripPassword(e.target.value)}
+                          placeholder="Auto-generated if left empty"
+                          className="flex-1 px-4 py-2 bg-white/5 border border-white/15 rounded-lg text-white text-sm placeholder:text-white/25 focus:border-amber-500 focus:outline-none" />
+                        <button onClick={() => setTripPassword(Math.random().toString(36).slice(2, 8).toUpperCase())}
+                          className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-amber-400 text-sm font-medium transition-colors">
+                          🎲 Generate
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -484,11 +509,13 @@ export default function TripWizard({ onClose }) {
                     <h3 className="text-4xl font-bold mb-3">Trip Created!</h3>
                     <p className="text-white/60 text-lg mb-6">Your adventure to <span className="text-emerald-400 font-semibold">{createdTrip.destination}</span> is ready</p>
 
-                    <div className="inline-block p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl mb-6">
-                      <p className="text-amber-300 text-sm font-medium mb-1">Trip Password</p>
-                      <p className="text-2xl font-mono font-bold text-amber-400 tracking-widest">{tripPassword}</p>
-                      <p className="text-amber-300/50 text-xs mt-1">Share with friends so they can join</p>
-                    </div>
+                    {!isPublic && (
+                      <div className="inline-block p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl mb-6">
+                        <p className="text-amber-300 text-sm font-medium mb-1">Trip Password</p>
+                        <p className="text-2xl font-mono font-bold text-amber-400 tracking-widest">{tripPassword}</p>
+                        <p className="text-amber-300/50 text-xs mt-1">Share with friends so they can join</p>
+                      </div>
+                    )}
 
                     <div className="flex gap-3 justify-center">
                       <button onClick={() => navigate(`/trip/${createdTrip.id}`)}
@@ -497,7 +524,7 @@ export default function TripWizard({ onClose }) {
                       </button>
                       <button onClick={() => {
                         const link = `${window.location.href.split('#')[0]}#/trip/${createdTrip.id}`;
-                        const text = `Join my trip to ${createdTrip.destination} on WanderTribe!\n${link}\nPassword: ${tripPassword}`;
+                        const text = `Join my trip to ${createdTrip.destination} on WanderTribe!\n${link}${!isPublic ? `\nPassword: ${tripPassword}` : ''}`;
                         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
                       }}
                         className="px-6 py-4 bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 rounded-2xl text-green-400 font-medium transition-colors">

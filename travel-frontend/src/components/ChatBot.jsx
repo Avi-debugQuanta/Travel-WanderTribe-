@@ -213,30 +213,59 @@ export default function ChatBot({ tripId, members = [], onSwitchTab }) {
                     prose-blockquote:border-l-emerald-500 prose-blockquote:bg-emerald-500/5 prose-blockquote:rounded-r-xl prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:text-emerald-200/80 prose-blockquote:text-sm prose-blockquote:italic
                     prose-code:text-cyan-300 prose-code:bg-cyan-500/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
                     prose-hr:border-white/10">
-                    <ReactMarkdown
-                      components={{
-                        a: ({node, href, ...props}) => {
-                          if (href === '#bookings') {
-                            return (
-                              <button onClick={(e) => { e.preventDefault(); if (onSwitchTab) onSwitchTab('bookings'); }}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/30 to-teal-600/30 text-teal-200 font-medium rounded-lg hover:from-emerald-500/40 hover:to-teal-500/40 transition-colors my-1 border border-teal-500/30 shadow-sm"
-                                title="Open Bookings Tab">
-                                <span>🛒</span> {props.children}
-                              </button>
-                            );
-                          }
-                          return (
-                            <a href={href} target="_blank" rel="noopener noreferrer" 
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 text-fuchsia-200 font-medium rounded-lg hover:from-violet-500/40 hover:to-fuchsia-500/40 transition-colors my-1 no-underline border border-fuchsia-500/30 shadow-sm"
-                              {...props}>
-                              <span>🔗</span> {props.children}
-                            </a>
-                          );
-                        }
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
+                    {(() => {
+                      const content = msg.content;
+                      const thinkMatch = content.match(/<think>([\s\S]*?)(<\/think>|$)/);
+                      let thinkContent = null;
+                      let restContent = content;
+                      
+                      if (thinkMatch) {
+                        thinkContent = thinkMatch[1];
+                        restContent = content.replace(/<think>[\s\S]*?(<\/think>|$)/, '').trim();
+                      }
+
+                      return (
+                        <>
+                          {thinkContent != null && (
+                            <div className="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 my-2 text-slate-400 text-sm italic font-mono mb-4 shadow-inner">
+                              <div className="flex items-center gap-2 mb-2 text-emerald-500/70 font-semibold text-xs uppercase tracking-wider">
+                                <span className={content.includes('</think>') ? '' : 'animate-pulse'}>🧠</span>
+                                {content.includes('</think>') ? 'AI thought process' : 'AI is thinking...'}
+                              </div>
+                              <ReactMarkdown components={{
+                                p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />
+                              }}>{thinkContent}</ReactMarkdown>
+                            </div>
+                          )}
+                          {restContent && (
+                            <ReactMarkdown
+                              components={{
+                                a: ({node, href, ...props}) => {
+                                  if (href === '#bookings') {
+                                    return (
+                                      <button onClick={(e) => { e.preventDefault(); if (onSwitchTab) onSwitchTab('bookings'); }}
+                                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/30 to-teal-600/30 text-teal-200 font-medium rounded-lg hover:from-emerald-500/40 hover:to-teal-500/40 transition-colors my-1 border border-teal-500/30 shadow-sm"
+                                        title="Open Bookings Tab">
+                                        <span>🛒</span> {props.children}
+                                      </button>
+                                    );
+                                  }
+                                  return (
+                                    <a href={href} target="_blank" rel="noopener noreferrer" 
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 text-fuchsia-200 font-medium rounded-lg hover:from-violet-500/40 hover:to-fuchsia-500/40 transition-colors my-1 no-underline border border-fuchsia-500/30 shadow-sm"
+                                      {...props}>
+                                      <span>🔗</span> {props.children}
+                                    </a>
+                                  );
+                                }
+                              }}
+                            >
+                              {restContent}
+                            </ReactMarkdown>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <p className="text-sm sm:text-base">{msg.content}</p>

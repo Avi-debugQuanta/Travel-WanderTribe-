@@ -50,7 +50,7 @@ Weave the details into your sentence like this:
 NEVER use external links or godaddy links!
 
 Weave your deep knowledge of Indian routes and hidden gems seamlessly into the conversation.
-CRITICAL: Output ONLY the final response. Do NOT show reasoning or meta-commentary."""
+CRITICAL: You MUST begin your response by sharing your internal thought process wrapped in `<think>` and `</think>` tags. Then output your final response for the user."""
 
 PLANNER_SYSTEM_PROMPT = """You are WanderTribe AI — the world's most detailed and passionate Indian road-trip planner.
 You know every highway, dhaba, scenic viewpoint, hotel, km marker, local guide, and hidden gem on Indian routes.
@@ -94,7 +94,7 @@ class AIService:
             "model": "llama-3.1-8b-instant",
             "messages": messages,
             "temperature": 0.7,
-            "max_tokens": 4096,
+            "max_tokens": 1500,
             "stream": False
         }
         if json_mode:
@@ -135,7 +135,7 @@ class AIService:
         messages.append({"role": "user", "content": request.prompt})
 
         payload = {
-            "model": "llama-3.1-8b-instant",
+            "model": "llama-3.3-70b-versatile",
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 1024,
@@ -205,9 +205,9 @@ Style: {request.travelStyle}
 User Notes: {request.chatSummary}
 
 Is this request too vague to build a highly detailed itinerary? For example, if it lacks details on group composition (solo/family/friends), specific interests (adventure/relaxation/culture), or preferred transport.
-If it is TOO VAGUE, return JSON with "needs_clarification": true and a "questions" array of 2-3 specific questions to ask the user.
+If it is TOO VAGUE, return JSON with "needs_clarification": true and a "questions" array of 2-3 specific questions (AS PLAIN STRINGS) to ask the user.
 If it is CLEAR ENOUGH, return "needs_clarification": false.
-Output ONLY valid JSON."""
+Output ONLY valid JSON. Example: {{"needs_clarification": true, "questions": ["Question 1?", "Question 2?"]}}"""
 
             ambiguity_messages = [
                 {"role": "system", "content": "You are a travel ambiguity checker. Output ONLY valid JSON."},
@@ -251,8 +251,8 @@ For EACH day include:
 Route stops table: | Km | Stop | Activity | Duration |
 Hour-by-hour schedule (6AM-10PM)
 Hotel: name, ⭐rating (reviews), ₹price, 📞phone, booking link
-Food table: | Meal | Place | Dish | ₹Cost | ⭐ | 📞Phone |
-Risk table: | Activity | 🟢Safe/🟡Moderate/🔴Risky | Tip |
+Food list: Meal at Place - Dish (₹Cost) ⭐ 📞Phone
+Risk list: Activity - 🟢Safe/🟡Moderate/🔴Risky - Tip
 Guide: name, 📞phone, ₹cost/day
 Day budget table
 3 insider tips

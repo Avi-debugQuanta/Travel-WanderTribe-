@@ -315,9 +315,14 @@ export default function Bookings({ tripId, trip, onCartUpdate, members = [] }) {
                         <h4 className="font-semibold text-lg sm:text-xl">{item.name}</h4>
                         {item.location && <p className="text-white/50 text-sm">📍 {item.location}</p>}
                       </div>
-                      <div className="text-right shrink-0">
+                      <div className="text-right shrink-0 flex flex-col items-end">
                         <span className="text-emerald-400 font-bold text-xl">₹{item.price.toLocaleString()}</span>
                         <span className="text-white/30 text-xs block">/day</span>
+                        {!isExpanded && (
+                          <div className="mt-2 text-emerald-400/80 text-xs font-medium flex items-center gap-1 bg-emerald-500/10 px-2 py-1 rounded-md">
+                            View & Propose <span className="text-[10px]">▼</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <p className="text-white/40 text-sm mt-1 line-clamp-2">{item.desc || item.bio}</p>

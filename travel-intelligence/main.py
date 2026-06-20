@@ -27,9 +27,16 @@ def chat_stream(request: ChatRequest):
 def chat_sync(request: ChatRequest):
     return {"response": ai_service.chat_sync(request)}
 
+from fastapi import Request
+
 @app.post("/ai/curate")
-def curate_itinerary(request: CurateRequest):
-    return ai_service.curate(request)
+async def curate_itinerary(request: Request):
+    body_bytes = await request.body()
+    print("RAW BODY:", body_bytes)
+    import json
+    from services.models import CurateRequest
+    req_obj = CurateRequest(**json.loads(body_bytes))
+    return ai_service.curate(req_obj)
 
 @app.post("/ai/season")
 def get_season(request: SeasonRequest):

@@ -278,13 +278,13 @@ export default function TripDetail() {
               <p className="text-white/40 text-sm mb-2">Share invite link</p>
               <button onClick={() => {
                 const link = `${window.location.href.split('#')[0]}#/trip/${id}`;
-                const pw = trip?.tripPassword ? `\nPassword: ${trip.tripPassword}` : '';
+                const pw = (!trip?.isPublic && trip?.tripPassword) ? `\nPassword: ${trip.tripPassword}` : '';
                 const text = `Join my trip to ${trip?.destination || 'an adventure'} on WanderTribe! ${link}${pw}`;
                 window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
               }}
                 className="w-full py-3 bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 rounded-xl text-green-400 text-sm font-medium transition-colors flex items-center justify-center gap-2">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                Share on WhatsApp {trip?.tripPassword ? '(includes password)' : ''}
+                Share on WhatsApp {(!trip?.isPublic && trip?.tripPassword) ? '(includes password)' : ''}
               </button>
             </div>
 
@@ -309,25 +309,48 @@ export default function TripDetail() {
       {isMember === false && !isLeader && trip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 w-full max-w-sm mx-4 text-center">
-            <span className="text-5xl block mb-4">🔒</span>
-            <h3 className="text-2xl font-bold mb-2">Join this Trip</h3>
-            <p className="text-white/50 mb-6">Enter the trip password to access <span className="text-emerald-400">{trip.destination}</span></p>
-            <input type="text" value={joinPassword} onChange={e => setJoinPassword(e.target.value)}
-              placeholder="Enter trip password..."
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none mb-3" />
-            {joinError && <p className="text-red-400 text-sm mb-3">{joinError}</p>}
-            <button onClick={async () => {
-              try {
-                await tripApi.joinTrip(id, user.email, joinPassword);
-                setIsMember(true);
-                loadMembers();
-                setJoinError('');
-              } catch (err) {
-                setJoinError(err.response?.data?.error || 'Wrong password');
-              }
-            }} className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition-all">
-              Join Trip
-            </button>
+            {trip.isPublic ? (
+              <>
+                <span className="text-5xl block mb-4">🌍</span>
+                <h3 className="text-2xl font-bold mb-2">Join this Trip</h3>
+                <p className="text-white/50 mb-6">This is a public trip to <span className="text-emerald-400">{trip.destination}</span></p>
+                {joinError && <p className="text-red-400 text-sm mb-3">{joinError}</p>}
+                <button onClick={async () => {
+                  try {
+                    await tripApi.joinTrip(id, user.email, '');
+                    setIsMember(true);
+                    loadMembers();
+                    setJoinError('');
+                  } catch (err) {
+                    setJoinError(err.response?.data?.error || 'Failed to join');
+                  }
+                }} className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition-all">
+                  Join Public Trip
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="text-5xl block mb-4">🔒</span>
+                <h3 className="text-2xl font-bold mb-2">Join this Trip</h3>
+                <p className="text-white/50 mb-6">Enter the trip password to access <span className="text-emerald-400">{trip.destination}</span></p>
+                <input type="text" value={joinPassword} onChange={e => setJoinPassword(e.target.value)}
+                  placeholder="Enter trip password..."
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-base placeholder:text-white/30 focus:border-emerald-500 focus:outline-none mb-3" />
+                {joinError && <p className="text-red-400 text-sm mb-3">{joinError}</p>}
+                <button onClick={async () => {
+                  try {
+                    await tripApi.joinTrip(id, user.email, joinPassword);
+                    setIsMember(true);
+                    loadMembers();
+                    setJoinError('');
+                  } catch (err) {
+                    setJoinError(err.response?.data?.error || 'Wrong password');
+                  }
+                }} className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 rounded-xl font-semibold transition-all">
+                  Join Trip
+                </button>
+              </>
+            )}
             <button onClick={() => navigate('/dashboard')} className="w-full mt-3 py-2.5 text-white/40 hover:text-white transition-colors text-sm">
               Back to Dashboard
             </button>
