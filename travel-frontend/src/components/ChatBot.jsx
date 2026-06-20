@@ -213,7 +213,19 @@ export default function ChatBot({ tripId, members = [] }) {
                     prose-blockquote:border-l-emerald-500 prose-blockquote:bg-emerald-500/5 prose-blockquote:rounded-r-xl prose-blockquote:py-2 prose-blockquote:px-4 prose-blockquote:text-emerald-200/80 prose-blockquote:text-sm prose-blockquote:italic
                     prose-code:text-cyan-300 prose-code:bg-cyan-500/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md prose-code:text-xs
                     prose-hr:border-white/10">
-                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown
+                      components={{
+                        a: ({node, ...props}) => (
+                          <a target="_blank" rel="noopener noreferrer" 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 text-fuchsia-200 font-medium rounded-lg hover:from-violet-500/40 hover:to-fuchsia-500/40 transition-colors my-1 no-underline border border-fuchsia-500/30 shadow-sm"
+                            {...props}>
+                            <span>🔗</span> {props.children}
+                          </a>
+                        )
+                      }}
+                    >
+                      {msg.content}
+                    </ReactMarkdown>
                   </div>
                 ) : (
                   <p className="text-sm sm:text-base">{msg.content}</p>
