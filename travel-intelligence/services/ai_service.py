@@ -39,7 +39,7 @@ class AIService:
 
     def _call_groq_sync(self, messages, json_mode=False) -> str:
         payload = {
-            "model": "llama3-8b-8192",
+            "model": "llama-3.1-8b-instant",
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 4096,
@@ -83,7 +83,7 @@ class AIService:
         messages.append({"role": "user", "content": request.prompt})
 
         payload = {
-            "model": "llama3-8b-8192",
+            "model": "llama-3.1-8b-instant",
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 1024,
