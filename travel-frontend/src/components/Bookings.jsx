@@ -58,6 +58,20 @@ const MOCK_HOTELS = [
     amenities: ['Dorms', 'Common Room', 'WiFi', 'Cafe'],
     payment: 'Cards/UPI accepted',
     img: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400' },
+  { name: 'Solang Ski Resort', price: 6000, rating: 4.7, location: 'Manali', type: 'HOTEL',
+    desc: 'Luxury stay at Solang Valley, perfect for winter sports',
+    view: 'Panoramic views of the snow-clad Solang Valley.',
+    vibe: 'Luxury & Adventure', distance: '12 km from Mall Road',
+    amenities: ['Skiing', 'Spa', 'Restaurant', 'Room Service'],
+    payment: 'All cards accepted',
+    img: 'https://images.unsplash.com/photo-1512273222628-4daea6e55abb?w=400' },
+  { name: 'Backpacker Panda', price: 800, rating: 4.4, location: 'Manali', type: 'HOTEL',
+    desc: 'Vibrant hostel in Old Manali, great for solo travelers',
+    view: 'Apple orchards and the old Manali village.',
+    vibe: 'Backpacker & Social', distance: 'Old Manali, 2 km from Mall Road',
+    amenities: ['Dorms', 'Common Room', 'WiFi', 'Cafe'],
+    payment: 'Cash/UPI accepted',
+    img: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400' },
 ];
 
 const MOCK_CABS = [

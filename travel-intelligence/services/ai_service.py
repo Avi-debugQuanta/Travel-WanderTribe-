@@ -15,6 +15,8 @@ OFFICIAL_INVENTORY = """
 - Apple Orchard Cottage (Naggar) | ₹2000 | ⭐ 4.3 | Vibe: Peaceful & Green
 - The Village Cafe & Stay (Tosh) | ₹1500 | ⭐ 4.4 | Vibe: Hippie & Relaxed
 - Zostel (Spiti) | ₹1000 | ⭐ 4.6 | Vibe: Backpacker & Social
+- Solang Ski Resort (Manali) | ₹6000 | ⭐ 4.7 | Vibe: Luxury & Adventure
+- Backpacker Panda (Manali) | ₹800 | ⭐ 4.4 | Vibe: Backpacker & Social
 [CABS]
 - Mountain Wheels - Innova Crysta | ₹3000 | ⭐ 4.6 | Best for families
 - Hill Taxi - Swift Dzire | ₹1800 | ⭐ 4.3 | Budget friendly sedan
