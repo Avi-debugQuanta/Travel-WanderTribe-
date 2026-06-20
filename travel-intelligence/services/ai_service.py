@@ -39,6 +39,21 @@ class AIService:
     def __init__(self):
         self.api_key = os.getenv("GROQ_API_KEY", "")
         self.url = "https://api.groq.com/openai/v1/chat/completions"
+        self.training_log_file = "chat_training_data.jsonl"
+
+    def _log_interaction(self, prompt: str, response: str, context: dict = None):
+        try:
+            import datetime
+            entry = {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "prompt": prompt,
+                "response": response,
+                "context": context or {}
+            }
+            with open(self.training_log_file, "a", encoding="utf-8") as f:
+                f.write(json.dumps(entry) + "\n")
+        except Exception as e:
+            print(f"Failed to log training data: {e}")
 
     def _build_chat_system_prompt(self, destination: str, trip_context: dict) -> str:
         knowledge = rag_service.get_knowledge_for_destination(destination)
@@ -106,6 +121,7 @@ class AIService:
         }
 
         def event_stream():
+            full_response = ""
             try:
                 with requests.post(self.url, json=payload, headers=headers, stream=True) as response:
                     if response.status_code != 200:
@@ -117,6 +133,8 @@ class AIService:
                             if decoded_line.startswith("data: "):
                                 data_str = decoded_line[6:]
                                 if data_str.strip() == "[DONE]":
+                                    # Log the complete interaction once the stream is done
+                                    self._log_interaction(request.prompt, full_response, request.tripContext)
                                     yield f"data: {json.dumps({'text': ''})}\n\n"
                                     return
                                 try:
@@ -125,6 +143,7 @@ class AIService:
                                         delta = data_json["choices"][0].get("delta", {})
                                         text_chunk = delta.get("content", "")
                                         if text_chunk:
+                                            full_response += text_chunk
                                             yield f"data: {json.dumps({'text': text_chunk})}\n\n"
                                 except json.JSONDecodeError:
                                     pass
@@ -143,7 +162,9 @@ class AIService:
             messages.append({"role": role, "content": msg.get("content", "")})
         messages.append({"role": "user", "content": request.prompt})
 
-        return self._call_groq_sync(messages)
+        result = self._call_groq_sync(messages)
+        self._log_interaction(request.prompt, result, request.tripContext)
+        return result
 
     def curate(self, request: CurateRequest) -> dict:
         # 1. Ambiguity Check (Middleware)
