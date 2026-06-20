@@ -37,9 +37,6 @@ ${d.route ? `**Route:** ${d.route}` : ''}
 ### 🕰️ Schedule
 ${(d.schedule || []).map(s => `- ${s}`).join('\n')}
 
-### 🏨 Hotel & Stay
-${d.hotel}
-
 ### 🍽️ Food & Dining
 ${(d.food || []).map(f => `- ${f}`).join('\n')}
 
@@ -62,6 +59,7 @@ ${(d.tips || []).map(t => `- ${t}`).join('\n')}
       title: d.title || `Day ${d.day}`,
       content: content,
       routeStops: routeStops,
+      hotelDetails: d.hotel || '',
       totalKm: d.route || '',
       scenic: d.scenicRating || '★★★★☆'
     };
@@ -231,6 +229,25 @@ function DayCard({ day, isActive, theme, ideas }) {
       )}
 
       <div className="p-5">
+        {day.hotelDetails && (
+          <div className="mb-4 mt-2 p-4 rounded-xl bg-gradient-to-r from-violet-500/10 to-fuchsia-500/10 border border-violet-500/30 relative overflow-hidden group hover:border-violet-500/50 transition-all">
+            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-violet-400 to-fuchsia-500"></div>
+            <div className="flex justify-between items-start">
+              <div>
+                <h4 className="text-violet-300 font-bold text-sm mb-1 flex items-center gap-1.5">
+                  <span>🏨</span> WanderTribe Exclusive Stay
+                </h4>
+                <div className="text-white/80 text-sm leading-relaxed max-w-lg pr-4">
+                  <ReactMarkdown className="prose prose-invert prose-sm prose-p:my-1">{day.hotelDetails}</ReactMarkdown>
+                </div>
+              </div>
+              <button className="flex-shrink-0 px-4 py-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-500 hover:to-fuchsia-500 text-white text-xs font-bold rounded-lg shadow-lg shadow-violet-500/30 transform transition hover:scale-105">
+                Reserve ⚡️
+              </button>
+            </div>
+          </div>
+        )}
+
         <button onClick={() => setExpanded(!expanded)}
           className="flex items-center gap-2 text-sm font-medium text-white/50 hover:text-white/80 mb-3 transition-colors w-full">
           <svg className={`w-4 h-4 transition-transform ${expanded ? 'rotate-90' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -274,26 +291,6 @@ function DayCard({ day, isActive, theme, ideas }) {
                   ),
                   li: ({ children, ...props }) => {
                     const text = String(children || '');
-                    if (text.match(/book|makemytrip|goibibo/i)) {
-                      const hotelName = day.content.match(/\*\*([^*]+)\*\*.*?⭐/)?.[1] || '';
-                      return (
-                        <li {...props}>
-                          {children}
-                          <div className="flex gap-2 mt-2">
-                            <a href={`https://www.makemytrip.com/hotels/hotel-listing/?city=${encodeURIComponent(hotelName)}`}
-                              target="_blank" rel="noopener"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 text-[11px] font-medium hover:bg-blue-500/20 transition-all no-underline">
-                              🔗 Book on MakeMyTrip
-                            </a>
-                            <a href={`https://www.goibibo.com/hotels/`}
-                              target="_blank" rel="noopener"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400 text-[11px] font-medium hover:bg-orange-500/20 transition-all no-underline">
-                              🔗 Book on Goibibo
-                            </a>
-                          </div>
-                        </li>
-                      );
-                    }
                     if (text.match(/📞|call|contact|phone/i)) {
                       const phoneMatch = text.match(/(\+91[-\s]?\d{5}[-\s]?\d{5}|\d{10,})/);
                       if (phoneMatch) {
@@ -355,43 +352,43 @@ function generatePDF(itinerary, days, tripIdeas) {
   printWindow.document.write(`<!DOCTYPE html><html><head>
     <title>WanderTribe — Trip Roadmap</title>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
       * { margin:0; padding:0; box-sizing:border-box; }
-      body { font-family:'Inter',system-ui,sans-serif; line-height:1.8; color:#1e293b; max-width:900px; margin:0 auto; padding:50px 40px; }
-      .cover { text-align:center; padding:60px 0; margin-bottom:40px; border-bottom:3px solid #10b981; }
-      .cover h1 { font-size:36px; font-weight:800; background:linear-gradient(135deg,#10b981,#06b6d4); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-      .cover .subtitle { color:#64748b; font-size:14px; margin-top:8px; }
-      .cover .badge { display:inline-block; margin-top:15px; padding:8px 20px; background:linear-gradient(135deg,#10b981,#06b6d4); border-radius:20px; color:white; font-size:12px; font-weight:600; }
-      h2 { color:#10b981; font-size:20px; font-weight:700; margin:35px 0 15px; padding-bottom:8px; border-bottom:2px solid #e2e8f0; }
-      h3 { color:#0f766e; font-size:16px; font-weight:600; margin:20px 0 10px; }
-      h4 { color:#1e40af; font-size:14px; margin:15px 0 8px; }
-      p { margin-bottom:8px; font-size:13px; }
-      ul,ol { margin-left:20px; margin-bottom:12px; } li { margin-bottom:4px; font-size:13px; }
-      strong { color:#0f766e; }
-      em { color:#7c3aed; font-style:normal; }
-      blockquote { border-left:3px solid #10b981; background:#ecfdf5; padding:8px 16px; border-radius:0 8px 8px 0; margin:10px 0; font-size:12px; color:#065f46; }
-      table { width:100%; border-collapse:collapse; margin:12px 0; font-size:12px; }
-      th { background:#ecfdf5; color:#047857; text-align:left; padding:8px 12px; border:1px solid #d1fae5; font-weight:600; }
-      td { padding:7px 12px; border:1px solid #e2e8f0; }
-      tr:nth-child(even) td { background:#f8fafc; }
-      .footer { margin-top:50px; padding-top:20px; border-top:2px solid #10b981; text-align:center; color:#94a3b8; font-size:11px; }
-      .day-header { background:linear-gradient(135deg,#ecfdf5,#f0fdfa); padding:15px 20px; border-radius:12px; margin:30px 0 15px; border-left:4px solid #10b981; }
-      .day-header h2 { margin:0; border:none; padding:0; }
-      @media print { body { padding:30px; } .cover { padding:30px 0; } }
-      @page { margin: 1cm; }
+      body { font-family:'Inter',system-ui,sans-serif; line-height:1.8; color:#334155; max-width:900px; margin:0 auto; padding:50px 40px; background-color:#fafaf9; }
+      .cover { text-align:center; padding:60px 0; margin-bottom:40px; border-bottom:2px solid #e2e8f0; }
+      .cover h1 { font-family:'Playfair Display',serif; font-size:42px; font-weight:600; color:#0f172a; margin-bottom:10px; }
+      .cover .subtitle { color:#64748b; font-size:16px; margin-top:8px; font-style:italic; }
+      .cover .badge { display:inline-block; margin-top:20px; padding:10px 24px; background:#f43f5e; border-radius:30px; color:white; font-size:13px; font-weight:600; letter-spacing:1px; box-shadow: 0 4px 14px rgba(244,63,94,0.3); }
+      h2 { font-family:'Playfair Display',serif; color:#0f172a; font-size:24px; font-weight:600; margin:40px 0 20px; padding-bottom:12px; border-bottom:1px solid #e2e8f0; }
+      h3 { color:#f43f5e; font-size:18px; font-weight:600; margin:25px 0 12px; }
+      h4 { color:#6366f1; font-size:15px; margin:20px 0 10px; }
+      p { margin-bottom:12px; font-size:14px; color:#475569; }
+      ul,ol { margin-left:24px; margin-bottom:16px; color:#475569; } li { margin-bottom:6px; font-size:14px; }
+      strong { color:#1e293b; font-weight:600; }
+      em { color:#8b5cf6; font-style:italic; }
+      blockquote { border-left:4px solid #f43f5e; background:#fff1f2; padding:12px 20px; border-radius:0 12px 12px 0; margin:16px 0; font-size:14px; color:#be123c; font-style:italic; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+      table { width:100%; border-collapse:separate; border-spacing:0; margin:20px 0; font-size:13px; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+      th { background:#f8fafc; color:#334155; text-align:left; padding:12px 16px; font-weight:600; border-bottom:1px solid #e2e8f0; }
+      td { padding:10px 16px; border-bottom:1px solid #f1f5f9; }
+      tr:last-child td { border-bottom:none; }
+      .footer { margin-top:60px; padding-top:30px; border-top:1px solid #e2e8f0; text-align:center; color:#94a3b8; font-size:12px; }
+      .day-header { background:linear-gradient(to right,#fff1f2,#ffffff); padding:20px 24px; border-radius:16px; margin:40px 0 20px; border-left:6px solid #f43f5e; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+      .day-header h2 { margin:0; border:none; padding:0; font-size:28px; color:#be123c; }
+      @media print { body { padding:30px; background-color:white; } .cover { padding:30px 0; } .day-header { box-shadow:none; border:1px solid #e2e8f0; border-left:6px solid #f43f5e; } }
+      @page { margin: 1.5cm; }
     </style>
   </head><body>
     <div class="cover">
-      <h1>🏔️ WanderTribe</h1>
-      <p class="subtitle">AI-Curated Road Trip Itinerary</p>
+      <h1>WanderTribe Exclusive</h1>
+      <p class="subtitle">A Handcrafted Road Trip Journey</p>
       <p class="subtitle">${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p>
-      <div class="badge">✨ Powered by AI • Perfected by Your Group</div>
+      <div class="badge">Curated Personally For You ✨</div>
     </div>
     ${roadmapHTML}
     <div id="content"></div>
     <div class="footer">
-      <p>Generated by <strong>WanderTribe AI</strong> — Your group's smart travel companion</p>
-      <p style="margin-top:4px;">Prices are estimates based on Google Reviews & traveler data. Always confirm before booking.</p>
+      <p>Handcrafted by your friends at <strong>WanderTribe</strong></p>
+      <p style="margin-top:6px;">Wishing you safe travels and unforgettable memories!</p>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
     <script>

@@ -1,0 +1,305 @@
+{
+  "info": {
+    "name": "WanderTribe Microservices API",
+    "description": "Complete Postman collection for all WanderTribe APIs (Java Spring Boot + Python FastAPI)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "java_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "python_url", "value": "http://localhost:8000", "type": "string" },
+    { "key": "tripId", "value": "1", "type": "string" },
+    { "key": "userId", "value": "1", "type": "string" },
+    { "key": "ideaId", "value": "1", "type": "string" },
+    { "key": "proposalId", "value": "1", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Users & Auth",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/users/send-otp", "host": ["{{java_url}}"], "path": ["api", "users", "send-otp"] },
+            "body": { "mode": "raw", "raw": "{\"email\": \"test@example.com\"}" }
+          }
+        },
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/users/register", "host": ["{{java_url}}"], "path": ["api", "users", "register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"1234567890\"\n}" }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/users/login", "host": ["{{java_url}}"], "path": ["api", "users", "login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}" }
+          }
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/users/{{userId}}", "host": ["{{java_url}}"], "path": ["api", "users", "{{userId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Trips & Members",
+      "item": [
+        {
+          "name": "Create Trip",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/trips", "host": ["{{java_url}}"], "path": ["api", "trips"] },
+            "body": { "mode": "raw", "raw": "{\n  \"destination\": \"Manali\",\n  \"startDate\": \"2026-06-19\",\n  \"endDate\": \"2026-06-25\",\n  \"budget\": \"25000\",\n  \"travelStyle\": \"chill\"\n}" }
+          }
+        },
+        {
+          "name": "Get All Trips",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/trips", "host": ["{{java_url}}"], "path": ["api", "trips"] }
+          }
+        },
+        {
+          "name": "Get Trip by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}"] }
+          }
+        },
+        {
+          "name": "Get Trip Members",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/members", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "members"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Ideas Board",
+      "item": [
+        {
+          "name": "Create Idea",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/ideas", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "ideas"] },
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Stay in a treehouse\",\n  \"description\": \"I found this cool treehouse in Old Manali\",\n  \"category\": \"ACCOMMODATION\"\n}" }
+          }
+        },
+        {
+          "name": "Get Trip Ideas",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/ideas", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "ideas"] }
+          }
+        },
+        {
+          "name": "Vote on Idea",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/ideas/{{ideaId}}/vote", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "ideas", "{{ideaId}}", "vote"] },
+            "body": { "mode": "raw", "raw": "true" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. AI Intelligence (Java Proxies)",
+      "item": [
+        {
+          "name": "Chat (Java Proxy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/chat", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "chat"] },
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"What are the best places to visit in Manali?\",\n  \"chatHistory\": []\n}" }
+          }
+        },
+        {
+          "name": "Curate Itinerary (Java Proxy)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/curate", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "curate"] }
+          }
+        },
+        {
+          "name": "Get Season Info (Java Proxy)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/season", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "season"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. AI Intelligence (Direct Python APIs)",
+      "item": [
+        {
+          "name": "Chat (Direct Python)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{python_url}}/ai/chat", "host": ["{{python_url}}"], "path": ["ai", "chat"] },
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"Hi\",\n  \"chatHistory\": [],\n  \"tripContext\": {\"destination\": \"Manali\"}\n}" }
+          }
+        },
+        {
+          "name": "Curate (Direct Python)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{python_url}}/ai/curate", "host": ["{{python_url}}"], "path": ["ai", "curate"] },
+            "body": { "mode": "raw", "raw": "{\n  \"destination\": \"Manali\",\n  \"startDate\": \"2026-06-19\",\n  \"endDate\": \"2026-06-25\",\n  \"budget\": \"25000\",\n  \"travelStyle\": \"chill\",\n  \"ideas\": \"Treehouse\",\n  \"chatSummary\": \"\"\n}" }
+          }
+        },
+        {
+          "name": "Season (Direct Python)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{python_url}}/ai/season", "host": ["{{python_url}}"], "path": ["ai", "season"] },
+            "body": { "mode": "raw", "raw": "{\n  \"destination\": \"Manali\",\n  \"startDate\": \"2026-06-19\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Proposals & Cart",
+      "item": [
+        {
+          "name": "Create Proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/proposals", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "proposals"] },
+            "body": { "mode": "raw", "raw": "{\n  \"itemName\": \"Hotel Manali Inn\",\n  \"itemType\": \"HOTEL\",\n  \"price\": 5000\n}" }
+          }
+        },
+        {
+          "name": "Get Proposals",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/trips/{{tripId}}/proposals", "host": ["{{java_url}}"], "path": ["api", "trips", "{{tripId}}", "proposals"] }
+          }
+        },
+        {
+          "name": "Vote on Proposal",
+          "request": {
+            "method": "POST",
+            "url": { 
+              "raw": "{{java_url}}/api/trips/{{tripId}}/proposals/{{proposalId}}/vote?vote=APPROVE&userId={{userId}}", 
+              "host": ["{{java_url}}"], 
+              "path": ["api", "trips", "{{tripId}}", "proposals", "{{proposalId}}", "vote"],
+              "query": [
+                { "key": "vote", "value": "APPROVE" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{java_url}}/api/cart", "host": ["{{java_url}}"], "path": ["api", "cart"] },
+            "body": { "mode": "raw", "raw": "{\n  \"tripId\": {{tripId}},\n  \"userId\": {{userId}},\n  \"itemName\": \"Hotel Manali Inn\",\n  \"originalPrice\": 5000,\n  \"itemType\": \"HOTEL\"\n}" }
+          }
+        },
+        {
+          "name": "Get User Cart",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/cart/trip/{{tripId}}/user/{{userId}}", "host": ["{{java_url}}"], "path": ["api", "cart", "trip", "{{tripId}}", "user", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Checkout Cart",
+          "request": {
+            "method": "POST",
+            "url": { 
+              "raw": "{{java_url}}/api/cart/checkout?tripId={{tripId}}&userId={{userId}}", 
+              "host": ["{{java_url}}"], 
+              "path": ["api", "cart", "checkout"],
+              "query": [
+                { "key": "tripId", "value": "{{tripId}}" },
+                { "key": "userId", "value": "{{userId}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Bookings & Wallet",
+      "item": [
+        {
+          "name": "Add Funds to Wallet",
+          "request": {
+            "method": "POST",
+            "url": { 
+              "raw": "{{java_url}}/api/wallet/{{userId}}/add?amount=10000", 
+              "host": ["{{java_url}}"], 
+              "path": ["api", "wallet", "{{userId}}", "add"],
+              "query": [
+                { "key": "amount", "value": "10000" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/wallet/{{userId}}", "host": ["{{java_url}}"], "path": ["api", "wallet", "{{userId}}"] }
+          }
+        },
+        {
+          "name": "Get Bookings",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{java_url}}/api/bookings/trip/{{tripId}}", "host": ["{{java_url}}"], "path": ["api", "bookings", "trip", "{{tripId}}"] }
+          }
+        }
+      ]
+    }
+  ]
+}
