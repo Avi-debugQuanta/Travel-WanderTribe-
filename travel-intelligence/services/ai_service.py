@@ -94,7 +94,7 @@ class AIService:
             "model": "llama-3.1-8b-instant",
             "messages": messages,
             "temperature": 0.7,
-            "max_tokens": 1500,
+            "max_tokens": 1200,
             "stream": False
         }
         if json_mode:
@@ -226,7 +226,7 @@ Output ONLY valid JSON. Example: {{"needs_clarification": true, "questions": ["Q
                 print(f"[Ambiguity Check Failed] {e}")
 
         # 2. Proceed to generation
-        knowledge = rag_service.get_knowledge_for_destination(request.destination)
+        knowledge = rag_service.get_knowledge_for_destination(request.destination, top_k=5)
         
         clarifications_text = f"\nUser's Clarifications: {request.clarificationAnswers}\n" if request.clarificationAnswers else ""
         
