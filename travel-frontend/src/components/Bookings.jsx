@@ -44,6 +44,20 @@ const MOCK_HOTELS = [
     amenities: ['Orchard View', 'Organic Food', 'Garden', 'Quiet Zone'],
     payment: 'Cash preferred',
     img: 'https://images.unsplash.com/photo-1510797215324-95aa89f43c33?w=400' },
+  { name: 'The Village Cafe & Stay', price: 1500, rating: 4.4, location: 'Tosh', type: 'HOTEL',
+    desc: 'Hippie vibe cafe with stay options, serves amazing Israeli food',
+    view: 'Unobstructed view of the Parvati valley and snow peaks.',
+    vibe: 'Hippie & Relaxed', distance: 'Heart of Tosh village',
+    amenities: ['Cafe', 'Music', 'Valley View', 'Bonfire'],
+    payment: 'Cash preferred',
+    img: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=400' },
+  { name: 'Zostel', price: 1000, rating: 4.6, location: 'Spiti', type: 'HOTEL',
+    desc: 'Asia highest backpacker hostel, vibrant community',
+    view: 'Barren cold desert mountains touching the blue sky.',
+    vibe: 'Backpacker & Social', distance: 'In Kaza',
+    amenities: ['Dorms', 'Common Room', 'WiFi', 'Cafe'],
+    payment: 'Cards/UPI accepted',
+    img: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=400' },
 ];
 
 const MOCK_CABS = [

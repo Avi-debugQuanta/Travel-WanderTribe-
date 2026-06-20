@@ -13,7 +13,7 @@ const AI_SUGGESTIONS = [
   '🚗 Transport tips and road conditions',
 ];
 
-export default function ChatBot({ tripId, members = [] }) {
+export default function ChatBot({ tripId, members = [], onSwitchTab }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -215,13 +215,24 @@ export default function ChatBot({ tripId, members = [] }) {
                     prose-hr:border-white/10">
                     <ReactMarkdown
                       components={{
-                        a: ({node, ...props}) => (
-                          <a target="_blank" rel="noopener noreferrer" 
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 text-fuchsia-200 font-medium rounded-lg hover:from-violet-500/40 hover:to-fuchsia-500/40 transition-colors my-1 no-underline border border-fuchsia-500/30 shadow-sm"
-                            {...props}>
-                            <span>🔗</span> {props.children}
-                          </a>
-                        )
+                        a: ({node, href, ...props}) => {
+                          if (href === '#bookings') {
+                            return (
+                              <button onClick={(e) => { e.preventDefault(); if (onSwitchTab) onSwitchTab('bookings'); }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-emerald-600/30 to-teal-600/30 text-teal-200 font-medium rounded-lg hover:from-emerald-500/40 hover:to-teal-500/40 transition-colors my-1 border border-teal-500/30 shadow-sm"
+                                title="Open Bookings Tab">
+                                <span>🛒</span> {props.children}
+                              </button>
+                            );
+                          }
+                          return (
+                            <a href={href} target="_blank" rel="noopener noreferrer" 
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-violet-600/30 to-fuchsia-600/30 text-fuchsia-200 font-medium rounded-lg hover:from-violet-500/40 hover:to-fuchsia-500/40 transition-colors my-1 no-underline border border-fuchsia-500/30 shadow-sm"
+                              {...props}>
+                              <span>🔗</span> {props.children}
+                            </a>
+                          );
+                        }
                       }}
                     >
                       {msg.content}

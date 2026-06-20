@@ -182,7 +182,7 @@ export default function TripDetail() {
       {/* Content area */}
       <div className="flex gap-6">
         <div className={`flex-1 bg-white/5 border border-white/10 rounded-2xl overflow-hidden min-h-[500px] ${sidebarOpen ? 'max-w-[calc(100%-320px)]' : ''}`}>
-          {tab === 'chat' && <ChatBot tripId={parseInt(id)} members={members} />}
+          {tab === 'chat' && <ChatBot tripId={parseInt(id)} members={members} onSwitchTab={setTab} />}
           {tab === 'ideas' && <IdeasBoard tripId={parseInt(id)} />}
           {tab === 'itinerary' && <Itinerary tripId={parseInt(id)} />}
           {tab === 'bookings' && <Bookings tripId={parseInt(id)} trip={trip} onCartUpdate={refreshCart} members={members} />}
